@@ -1,5 +1,5 @@
 import React from 'react'
-import { Flex, Text, LinkExternal, Svg } from '@apeswapfinance/uikit'
+import { Flex, Text, LinkExternal, Svg, useModal } from '@apeswapfinance/uikit'
 import { TagVariants } from '@ape.swap/uikit'
 import { Box } from 'theme-ui'
 import ListView from 'components/ListView'
@@ -9,14 +9,20 @@ import { DualFarm, Tag } from 'state/types'
 import { getBalanceNumber } from 'utils/formatBalance'
 import BigNumber from 'bignumber.js'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
-import ApyButton from 'components/ApyCalculator/ApyButton'
 import { useTranslation } from 'contexts/Localization'
+import CalcButton from 'components/RoiCalculator/CalcButton'
 import CardActions from './CardActions'
 import { Container, FarmButton, NextArrow, ServiceTokenDisplayContainer, StyledTag } from './styles'
 import HarvestAction from './CardActions/HarvestAction'
 import { ActionContainer } from './CardActions/styles'
 import useIsMobile from '../../../hooks/useIsMobile'
 import ServiceTokenDisplay from '../../../components/ServiceTokenDisplay'
+import { Field, selectCurrency } from 'state/swap/actions'
+import { useAppDispatch } from 'state'
+import DualLiquidityModal from 'components/DualAddLiquidity/DualLiquidityModal'
+import { ChainId } from '@ape.swap/sdk'
+import { Svg as Icon } from '@ape.swap/uikit'
+import { selectOutputCurrency } from 'state/zap/actions'
 
 const DisplayFarms: React.FC<{ farms: DualFarm[]; openPid?: number; dualFarmTags: Tag[] }> = ({
   farms,
@@ -26,13 +32,34 @@ const DisplayFarms: React.FC<{ farms: DualFarm[]; openPid?: number; dualFarmTags
   const { chainId } = useActiveWeb3React()
   const { t } = useTranslation()
   const isMobile = useIsMobile()
+  const dispatch = useAppDispatch()
+
+  const [onPresentAddLiquidityWidgetModal] = useModal(<DualLiquidityModal />, true, true, 'liquidityWidgetModal')
+
+  const showLiquidity = (token, quoteToken, farm) => {
+    dispatch(
+      selectCurrency({
+        field: Field.INPUT,
+        currencyId: token,
+      }),
+    )
+    dispatch(
+      selectCurrency({
+        field: Field.OUTPUT,
+        currencyId: quoteToken,
+      }),
+    )
+    dispatch(
+      selectOutputCurrency({
+        currency1: farm.stakeTokens.token1.address[ChainId.MATIC],
+        currency2: farm.stakeTokens.token0.address[ChainId.MATIC],
+      }),
+    )
+    onPresentAddLiquidityWidgetModal()
+  }
 
   const farmsListView = farms.map((farm, i) => {
     const polygonScanUrl = `https://polygonscan.com/address/${farm.stakeTokenAddress}`
-
-    const liquidityUrl = `https://apeswap.finance/add/${
-      farm?.stakeTokens?.token0?.symbol === 'MATIC' ? 'ETH' : farm?.stakeTokens?.token0?.address[chainId]
-    }/${farm?.stakeTokens?.token1?.address[chainId]}`
     const userAllowance = farm?.userData?.allowance
     const userEarningsMiniChef = getBalanceNumber(farm?.userData?.miniChefEarnings || new BigNumber(0)).toFixed(2)
     const userEarningsRewarder = getBalanceNumber(farm?.userData?.rewarderEarnings || new BigNumber(0)).toFixed(2)
@@ -102,6 +129,10 @@ const DisplayFarms: React.FC<{ farms: DualFarm[]; openPid?: number; dualFarmTags
           </Flex>
         </>
       ),
+      ttWidth: '250px',
+      infoContentPosition: 'translate(8%, 0%)',
+      toolTipIconWidth: isMobile && '20px',
+      toolTipStyle: isMobile && { marginTop: '5px', marginRight: '10px' },
       cardContent: (
         <>
           <ListViewContent
@@ -113,7 +144,7 @@ const DisplayFarms: React.FC<{ farms: DualFarm[]; openPid?: number; dualFarmTags
               'APY includes annualized BANANA rewards and rewards for providing liquidity (DEX swap fees), compounded daily.',
             )}
             toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0, 38%)"
+            toolTipTransform="translate(8%, 0%)"
           />
           <ListViewContent
             title={t('APR')}
@@ -134,14 +165,23 @@ const DisplayFarms: React.FC<{ farms: DualFarm[]; openPid?: number; dualFarmTags
               'BANANA reward APRs are calculated in real time. DEX swap fee APRs are calculated based on previous 24 hours of trading volume. Note: APRs are provided for your convenience. APRs are constantly changing and do not represent guaranteed returns.',
             )}
             toolTipPlacement={i === farms.length - 1 && i !== 0 ? 'topLeft' : 'bottomLeft'}
-            toolTipTransform={i === farms.length - 1 && i !== 0 ? 'translate(0, -105%)' : 'translate(0, 38%)'}
+            toolTipTransform={i === farms.length - 1 && i !== 0 ? 'translate(-8%, 0%)' : 'translate(8%, 0%)'}
             aprCalculator={
-              <ApyButton
-                lpLabel={`${farm?.stakeTokens?.token1?.symbol}-${farm?.stakeTokens?.token0?.symbol}`}
+              <CalcButton
+                label={`${farm?.stakeTokens?.token1?.symbol}-${farm?.stakeTokens?.token0?.symbol}`}
                 rewardTokenName="BANANA"
                 rewardTokenPrice={farm.rewardToken0Price}
-                apy={farm?.apr / 100 + parseFloat(farm?.lpApr) / 100}
-                addLiquidityUrl={liquidityUrl}
+                apr={farm?.apr}
+                lpApr={parseFloat(farm?.lpApr)}
+                apy={parseFloat(farm?.apy)}
+                lpAddress={farm.stakeTokenAddress}
+                isLp
+                tokenAddress={farm?.stakeTokens?.token1?.address[chainId]}
+                quoteTokenAddress={
+                  farm?.stakeTokens?.token0?.symbol === 'MATIC' ? 'ETH' : farm?.stakeTokens?.token0?.address[chainId]
+                }
+                lpPrice={farm.stakeTokenPrice}
+                dualFarm={farm}
               />
             }
           />
@@ -151,7 +191,7 @@ const DisplayFarms: React.FC<{ farms: DualFarm[]; openPid?: number; dualFarmTags
             width={isMobile ? 100 : 180}
             toolTip={t('The total value of the LP tokens currently staked in this farm.')}
             toolTipPlacement={isMobile ? 'bottomRight' : 'bottomLeft'}
-            toolTipTransform={isMobile ? 'translate(-75%, 75%)' : 'translate(0%, 75%)'}
+            toolTipTransform={isMobile ? 'translate(13%, 0%)' : 'translate(23%, 0%)'}
           />
           <ListViewContent
             title={t('Earned')}
@@ -191,9 +231,17 @@ const DisplayFarms: React.FC<{ farms: DualFarm[]; openPid?: number; dualFarmTags
                 ml={10}
               />
             )}
-            <a href={liquidityUrl} target="_blank" rel="noopener noreferrer">
-              <FarmButton>{t('GET LP')}</FarmButton>
-            </a>
+            <FarmButton
+              onClick={() =>
+                showLiquidity(
+                  farm?.stakeTokens?.token1?.address[chainId],
+                  farm?.stakeTokens?.token0?.symbol === 'MATIC' ? 'ETH' : farm?.stakeTokens?.token0?.address[chainId],
+                  farm,
+                )
+              }
+            >
+              {t('GET LP')} <Icon icon="ZapIcon" color="primaryBright" />
+            </FarmButton>
             {!isMobile && (
               <ListViewContent
                 title={t('Available LP')}

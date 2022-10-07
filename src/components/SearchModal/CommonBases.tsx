@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import React from 'react'
-import { ChainId, Currency, currencyEquals, ETHER, Token } from '@apeswapfinance/sdk'
+import { ChainId, Currency, currencyEquals, ETHER, Token } from '@ape.swap/sdk'
 import { Flex, Text } from '@ape.swap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { SUGGESTED_BASES } from '../../config/constants'

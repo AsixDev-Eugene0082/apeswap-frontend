@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { Flex } from '@apeswapfinance/uikit'
 import { useWeb3React } from '@web3-react/core'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { useBlock } from 'state/block/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import { Pool } from 'state/types'
 import { useNetworkChainId } from 'state/hooks'
 import UnlockButton from 'components/UnlockButton'
@@ -114,7 +114,7 @@ const PoolTable: React.FC<HarvestProps> = ({ pool, removed }) => {
   } = pool
 
   const { account } = useWeb3React()
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const [actionPanelToggled, setActionPanelToggled] = useState(false)
   const toggleActionPanel = (e) => {
     if (e.target?.classList.contains('noClick')) return

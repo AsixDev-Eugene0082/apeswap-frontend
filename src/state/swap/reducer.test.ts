@@ -1,3 +1,4 @@
+import { SmartRouter } from '@ape.swap/sdk'
 import { RouterTypes } from 'config/constants'
 import { createStore, Store } from 'redux'
 import { Field, selectCurrency, SwapDelay } from './actions'
@@ -12,9 +13,10 @@ describe('swap reducer', () => {
       [Field.INPUT]: { currencyId: '' },
       typedValue: '',
       independentField: Field.INPUT,
-      swapDelay: SwapDelay.INVALID,
+      swapDelay: SwapDelay.INIT,
       bestRoute: {
         routerType: RouterTypes.APE,
+        smartRouter: SmartRouter.APE,
       },
       recipient: null,
     })
@@ -34,9 +36,10 @@ describe('swap reducer', () => {
         [Field.INPUT]: { currencyId: '' },
         typedValue: '',
         independentField: Field.INPUT,
-        swapDelay: SwapDelay.INVALID,
+        swapDelay: SwapDelay.INIT,
         bestRoute: {
           routerType: RouterTypes.APE,
+          smartRouter: SmartRouter.APE,
         },
         recipient: null,
       })

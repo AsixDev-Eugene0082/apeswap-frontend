@@ -8,12 +8,14 @@ import { useToast } from 'state/hooks'
 import { useAppDispatch } from 'state'
 import { useVaultStake } from 'views/Vaults/hooks/useVaultStake'
 import { useVaultUnstake } from 'views/Vaults/hooks/useVaultUnstake'
-import { getEtherscanLink } from 'utils'
+import { getEtherscanLink, showCircular } from 'utils'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import ListViewContent from 'components/ListViewContent'
 import DepositModal from '../Modals/DepositModal'
 import WithdrawModal from '../Modals/WithdrawModal'
 import { ActionContainer, CenterContainer, SmallButtonSquare, StyledButtonSquare } from './styles'
+import { useIsModalShown } from 'state/user/hooks'
+import { useHistory } from 'react-router-dom'
 
 interface StakeActionsProps {
   stakingTokenBalance: string
@@ -35,7 +37,9 @@ const StakeAction: React.FC<StakeActionsProps> = ({
   vaultVersion,
 }) => {
   const rawStakedBalance = getBalanceNumber(new BigNumber(stakedBalance))
+  const { showGeneralHarvestModal } = useIsModalShown()
   const dispatch = useAppDispatch()
+  const history = useHistory()
   const { chainId, account } = useActiveWeb3React()
   const userStakedBalanceUsd = `$${(
     getBalanceNumber(new BigNumber(stakedBalance) || new BigNumber(0)) * stakeTokenValueUsd
@@ -74,6 +78,7 @@ const StakeAction: React.FC<StakeActionsProps> = ({
     />,
   )
 
+  const displayGHCircular = () => showGeneralHarvestModal && showCircular(chainId, history, '?modal=circular-gh')
   const [onPresentWithdraw] = useModal(
     <WithdrawModal
       max={stakedBalance}
@@ -88,6 +93,7 @@ const StakeAction: React.FC<StakeActionsProps> = ({
               text: 'View Transaction',
               url: getEtherscanLink(trxHash, 'transaction', chainId),
             })
+            if (trxHash) displayGHCircular()
           })
           .catch((e) => {
             console.error(e)

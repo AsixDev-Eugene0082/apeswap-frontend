@@ -1,3 +1,4 @@
+/** @jsxImportSource theme-ui */
 import React, { useCallback, useMemo, useState } from 'react'
 import { Text } from '@apeswapfinance/uikit'
 import BigNumber from 'bignumber.js'
@@ -11,22 +12,12 @@ import { useGoldenBananaAddress } from 'hooks/useAddress'
 import useTokenBalance from 'hooks/useTokenBalance'
 
 import TokenInput from 'components/TokenInput'
-import CardValue from 'components/CardValue'
 import { useTranslation } from 'contexts/Localization'
 
-import {
-  StyledCard,
-  StyledCheckbox,
-  HeaderCard,
-  Header,
-  TokensDisplay,
-  ContentCard,
-  StyledButton,
-  FlexSection,
-  CheckBoxCon,
-  CheckBoxSection,
-  StyledText,
-} from './styles'
+import { StyledCard, HeaderCard, Header, TokensDisplay, ContentCard, StyledButton, FlexSection } from './styles'
+import { Flex } from 'theme-ui'
+import UnlockButton from 'components/UnlockButton'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 
 interface ReturnCardType {
   fromToken: string
@@ -34,7 +25,7 @@ interface ReturnCardType {
 }
 
 const ReturnCard: React.FC<ReturnCardType> = ({ fromToken, toToken }) => {
-  const [val, setVal] = useState('1')
+  const [val, setVal] = useState('')
   const [processing, setProcessing] = useState(false)
   const treasuryContract = useTreasury()
   const { toastSuccess } = useToast()
@@ -43,6 +34,7 @@ const ReturnCard: React.FC<ReturnCardType> = ({ fromToken, toToken }) => {
   const goldenBananaBalance = useTokenBalance(useGoldenBananaAddress())
   const goldenBananaContract = useGoldenBanana()
   const { t } = useTranslation()
+  const { account } = useActiveWeb3React()
 
   const { isApproving, isApproved, handleApprove } = useApproveTransaction({
     onRequiresApproval: async (loadedAccount) => {
@@ -106,10 +98,14 @@ const ReturnCard: React.FC<ReturnCardType> = ({ fromToken, toToken }) => {
           value={val}
           onSelectMax={handleSelectMax}
           onChange={handleChange}
-          max={fullBalance}
+          max={parseFloat(fullBalance).toFixed(2)}
           symbol={fromToken}
         />
-        {isApproved ? (
+        {!account ? (
+          <Flex sx={{ margin: '15px 0 10px 0' }}>
+            <UnlockButton table />
+          </Flex>
+        ) : isApproved ? (
           <StyledButton disabled={disabled} variant="primary" margin="10px" onClick={sell}>
             {t('RETURN')}
           </StyledButton>
@@ -120,27 +116,12 @@ const ReturnCard: React.FC<ReturnCardType> = ({ fromToken, toToken }) => {
         )}
 
         <FlexSection flexDirection="column" alignItems="center" mb="10px">
-          <CardValue
-            top="10px"
-            fontWeight={700}
-            fontSize="16px"
-            decimals={4}
-            value={valBanana}
-            prefix={`${t('OUTPUT')} ${toToken}`}
-          />
-
+          <Text fontSize="16px" fontWeight={700}>
+            {t('OUTPUT')} {`${toToken} ${valBanana ? valBanana?.toFixed(3) : 0}`}
+          </Text>
           <Text fontSize="12px" fontWeight={500}>
             *After 2% reflect fee
           </Text>
-
-          <CheckBoxSection>
-            <CheckBoxCon>
-              <StyledCheckbox id="checkbox" scale="md" />
-            </CheckBoxCon>
-            <StyledText fontSize="12px" fontWeight={500}>
-              {t('I understand what I am doing and want to enable unlimited conversion.')}
-            </StyledText>
-          </CheckBoxSection>
         </FlexSection>
       </ContentCard>
     </StyledCard>

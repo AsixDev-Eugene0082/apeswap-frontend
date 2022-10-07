@@ -30,7 +30,7 @@ const Transfer: React.FC<TransferProps> = ({ billNftAddress, billId, toAddress, 
       })
       .catch((e) => {
         console.error(e)
-        toastError(e?.data?.message || t('Something went wrong please try again'))
+        toastError(e?.data?.message || t('Error: Please try again.'))
         setPendingTrx(false)
       })
     dispatch(fetchUserOwnedBillsDataAsync(chainId, account))

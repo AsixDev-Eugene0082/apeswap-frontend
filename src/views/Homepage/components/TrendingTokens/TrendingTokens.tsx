@@ -4,7 +4,7 @@ import useInterval from 'hooks/useInterval'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { Flex, Text, Skeleton } from '@apeswapfinance/uikit'
 import useIntersectionObserver from 'hooks/useIntersectionObserver'
-import { CHAIN_ID } from 'config/constants/chains'
+import { ChainId } from '@ape.swap/sdk'
 import { Link } from 'react-router-dom'
 import { useFetchHomepageTokenStats, useHomepageTokenStats } from 'state/hooks'
 import { useTranslation } from 'contexts/Localization'
@@ -52,7 +52,7 @@ const TrendingTokens: React.FC = () => {
   }, [isIntersecting])
 
   useEffect(() => {
-    if (chainId === CHAIN_ID.MATIC) {
+    if (chainId === ChainId.MATIC) {
       setSelectedCat('polygon')
     } else {
       setSelectedCat(CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)])
@@ -75,7 +75,7 @@ const TrendingTokens: React.FC = () => {
                     <TokenContainer
                       as={Link}
                       to={`/swap/?outputCurrency=${token?.contractAddress}`}
-                      key={token?.tokenTicker}
+                      key={token?.contractAddress}
                       active={i >= tokenDisplayRange.tokenStartIndex && i < tokenDisplayRange.tokenEndIndex}
                       onClick={() =>
                         track({
@@ -129,9 +129,9 @@ const TrendingTokens: React.FC = () => {
                 })}
               </>
             ) : (
-              [...Array(NUMBER_OF_TOKENS_TO_DISPLAY)].map(() => {
+              [...Array(NUMBER_OF_TOKENS_TO_DISPLAY)].map((i) => {
                 return (
-                  <TokenContainer active>
+                  <TokenContainer active key={i}>
                     <Flex style={{ width: '136px' }}>
                       <Skeleton height="50px" width="136px" />
                     </Flex>

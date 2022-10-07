@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js'
-import { farmsConfig } from 'config/constants'
-import { FarmLpAprsType, LpTokenPrices } from 'state/types'
+import { Farm, FarmLpAprsType, LpTokenPrices } from 'state/types'
 import { getFarmApr } from 'utils/apr'
 import { getRoi, tokenEarnedPerThousandDollarsCompounding } from 'utils/compoundApyHelpers'
 
@@ -10,6 +9,7 @@ const cleanFarmData = (
   lpPrices: LpTokenPrices[],
   bananaPrice: BigNumber,
   farmLpAprs: FarmLpAprsType,
+  farmsConfig: Farm[],
 ) => {
   const data = chunkedFarms.map((chunk, index) => {
     const farmConfig = farmsConfig?.find((farm) => farm.pid === farmIds[index])

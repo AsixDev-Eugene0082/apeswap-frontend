@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import useIsMobile from 'hooks/useIsMobile'
 import { useToast } from 'state/hooks'
-import { getEtherscanLink } from 'utils'
+import { getEtherscanLink, showCircular } from 'utils'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import ListViewContent from 'components/ListViewContent'
 import { fetchVaultUserDataAsync } from 'state/vaults'
@@ -9,6 +9,8 @@ import useHarvestMaximizer from 'views/Vaults/hooks/useHarvestMaximizer'
 import { useAppDispatch } from 'state'
 import { StyledButton } from '../styles'
 import { ActionContainer } from './styles'
+import { useIsModalShown } from 'state/user/hooks'
+import { useHistory } from 'react-router-dom'
 
 interface HarvestActionsProps {
   pid: number
@@ -24,6 +26,10 @@ const HarvestAction: React.FC<HarvestActionsProps> = ({ pid, earnTokenSymbol, di
   const { onHarvest } = useHarvestMaximizer(pid)
   const { toastSuccess } = useToast()
   const isMobile = useIsMobile()
+  const history = useHistory()
+
+  const { showGeneralHarvestModal } = useIsModalShown()
+  const displayGHCircular = () => showGeneralHarvestModal && showCircular(chainId, history, '?modal=circular-gh')
 
   const handleHarvest = async () => {
     setPendingTrx(true)
@@ -34,6 +40,7 @@ const HarvestAction: React.FC<HarvestActionsProps> = ({ pid, earnTokenSymbol, di
           text: 'View Transaction',
           url: getEtherscanLink(trxHash, 'transaction', chainId),
         })
+        if (trxHash) displayGHCircular()
       })
       .catch((e) => {
         console.error(e)

@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js'
 import React, { useState } from 'react'
 import styled from 'styled-components'
 import { Flex } from '@apeswapfinance/uikit'
-import { useBlock } from 'state/block/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import { useWeb3React } from '@web3-react/core'
 import { getBalanceNumber } from 'utils/formatBalance'
 import { NfaStakingPool } from 'state/types'
@@ -43,7 +43,7 @@ const PCard = styled.div`
 const PoolCard: React.FC<HarvestProps> = ({ pool, removed }) => {
   const { sousId, tier, apr, totalStaked, startBlock, endBlock, userData, rewardToken, contractAddress } = pool
   const { account } = useWeb3React()
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const [showExpandableSection, setShowExpandableSection] = useState(false)
 
   const allowance = userData?.allowance

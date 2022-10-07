@@ -1,9 +1,9 @@
+import { MulticallUpdater } from 'lib/state/multicall'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './App'
 import Providers from './Providers'
 import ListsUpdater from './state/lists/updater'
-import MulticallUpdater from './state/multicall/updater'
 import TransactionUpdater from './state/transactions/updater'
 
 function Updaters() {

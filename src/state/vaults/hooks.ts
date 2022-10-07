@@ -4,9 +4,11 @@ import useRefresh from 'hooks/useRefresh'
 import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { useAppDispatch } from 'state'
-import { useFarmLpAprs, useTokenPrices } from 'state/hooks'
+import { useFarmLpAprs } from 'state/hooks'
+import { useFetchLpTokenPrices } from 'state/lpPrices/hooks'
+import { useFetchTokenPrices, useTokenPrices } from 'state/tokenPrices/hooks'
 import { VaultsState, State, Vault } from 'state/types'
-import { fetchVaultsPublicDataAsync, fetchVaultUserDataAsync, setFilteredVaults } from '.'
+import { fetchVaultsPublicDataAsync, fetchVaultUserDataAsync, setInitialVaultDataAsync } from '.'
 
 // Vault data
 export const usePollVaultsData = (includeArchive = false) => {
@@ -16,7 +18,6 @@ export const usePollVaultsData = (includeArchive = false) => {
   const { tokenPrices } = useTokenPrices()
   const farmLpAprs = useFarmLpAprs()
   useEffect(() => {
-    dispatch(setFilteredVaults(chainId))
     dispatch(fetchVaultsPublicDataAsync(chainId, tokenPrices, farmLpAprs))
     if (account) {
       dispatch(fetchVaultUserDataAsync(account, chainId))
@@ -44,5 +45,16 @@ export const useVaultUser = (pid) => {
     tokenBalance: vault.userData ? new BigNumber(vault.userData.tokenBalance) : new BigNumber(0),
     stakedBalance: vault.userData ? new BigNumber(vault.userData.stakedBalance) : new BigNumber(0),
     stakedWantBalance: vault.userData ? new BigNumber(vault.userData.stakedWantBalance) : new BigNumber(0),
+  }
+}
+
+export const useSetVaults = () => {
+  useFetchTokenPrices()
+  useFetchLpTokenPrices()
+  const dispatch = useAppDispatch()
+  const { vaults } = useVaults()
+  const { chainId } = useActiveWeb3React()
+  if (vaults.length === 0) {
+    dispatch(setInitialVaultDataAsync(chainId))
   }
 }

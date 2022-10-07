@@ -1,23 +1,25 @@
+/** @jsxImportSource theme-ui */
 import React, { CSSProperties } from 'react'
-import { Token } from '@apeswapfinance/sdk'
-import { Button, Text, CheckmarkCircleIcon } from '@apeswapfinance/uikit'
+import { Token } from '@ape.swap/sdk'
+import { Button, Text, CheckmarkCircleIcon, Flex } from '@ape.swap/uikit'
 import CurrencyLogo from 'components/Logo/CurrencyLogo'
+import { EXTENDED_LIST_DETAILS } from 'config/constants/lists'
 import { ListLogo } from 'components/Logo'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useCombinedInactiveList } from 'state/lists/hooks'
 import styled from 'styled-components'
 import { useIsUserAddedToken, useIsTokenActive } from 'hooks/Tokens'
 import { useTranslation } from 'contexts/Localization'
-import { AutoRow, RowFixed } from '../layout/Row'
-import { AutoColumn } from '../layout/Column'
+import { RowFixed } from '../layout/Row'
 
 const TokenSection = styled.div<{ dim?: boolean }>`
-  padding: 4px 20px;
-  height: 56px;
+  padding: 4px 5px;
+  height: 150px;
   display: grid;
   grid-template-columns: auto minmax(auto, 1fr) auto;
   grid-gap: 16px;
   align-items: center;
+  margin: 5px 0px;
 
   opacity: ${({ dim }) => (dim ? '0.4' : '1')};
 `
@@ -57,6 +59,10 @@ export default function ImportRow({
   const inactiveTokenList = useCombinedInactiveList()
   const list = chainId && inactiveTokenList?.[chainId]?.[token.address]?.list
 
+  // Extended doesn't need to be defined for each list
+  const extendedLogo = EXTENDED_LIST_DETAILS[list?.name]?.logo
+  const extendedName = EXTENDED_LIST_DETAILS[list?.name]?.name
+
   // check if already active on list or local storage tokens
   const isAdded = useIsUserAddedToken(token)
   const isActive = useIsTokenActive(token)
@@ -65,24 +71,25 @@ export default function ImportRow({
   return (
     <TokenSection style={style}>
       <CurrencyLogo currency={token} size="24px" style={{ opacity: dim ? '0.6' : '1' }} />
-      <AutoColumn gap="4px" style={{ opacity: dim ? '0.6' : '1' }}>
-        <AutoRow>
+      <Flex sx={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+        <Flex sx={{ alignItems: 'center' }}>
           <Text>{token.symbol}</Text>
           <Text color="textDisabled" ml="8px">
-            <NameOverflow title={token.name}>{token.name}</NameOverflow>
+            <NameOverflow title={extendedName || token.name}>{extendedName || token.name}</NameOverflow>
           </Text>
-        </AutoRow>
-        {list && list.logoURI && (
-          <RowFixed>
-            <Text small mr="4px" color="gray">
-              via {list.name}
+        </Flex>
+        {list && (list.logoURI || extendedLogo) && (
+          <Flex sx={{ alignItems: 'center' }}>
+            <Text size="8px" mr="10px" color="textDisabled" sx={{ lineHeight: '0px' }}>
+              via {extendedName || list.name}
             </Text>
-            <ListLogo logoURI={list.logoURI} size="12px" />
-          </RowFixed>
+            <ListLogo logoURI={extendedLogo || list.logoURI} size="12px" style={{ borderRadius: '6px' }} />
+          </Flex>
         )}
-      </AutoColumn>
+      </Flex>
       {!isActive && !isAdded ? (
         <Button
+          size="sm"
           onClick={() => {
             if (setImportToken) {
               setImportToken(token)

@@ -4,7 +4,7 @@ The `apeswap-frontend` repo is the primary frontend repository for [ApeSwap.Fina
 
 ## Contributions
 
-If you want to contribute to this repo, please refer to the [contributing guidelines](./CONTRIBUTING.md) of this project or jump directly over to the [Github Issues](https://github.com/ApeSwapFinance/apeswap-frontend/issues) page to explore issues, tasks, and grants to pick up and get started with today. Some even have financial bounties and incentives for your contributions!
+If you want to contribute to this repo, please refer to the [contributing guidelines](./CONTRIBUTING.md).
 
 ## Getting Started
 
@@ -27,7 +27,7 @@ Once everything is downloaded & installed, simply run `npm run start` to run the
 
 Interested in learning more about ApeSwap.Finance? Head over to our [official documentation](https://apeswap.gitbook.io/apeswap-finance/welcome/master) to read and learn more about our features, functionality, DAO, and ecosystem!
 
-Socials
+#### Socials
 
 - 📰 Medium (Our Blog): https://ape-swap.medium.com
 - 🐦 Twitter: https://twitter.com/ape_swap

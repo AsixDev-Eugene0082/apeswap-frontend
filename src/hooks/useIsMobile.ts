@@ -1,4 +1,4 @@
-import { useMatchBreakpoints } from '@apeswapfinance/uikit'
+import { useMatchBreakpoints } from '@ape.swap/uikit'
 
 const useIsMobile = () => {
   const { isXl, isLg, isXxl } = useMatchBreakpoints()

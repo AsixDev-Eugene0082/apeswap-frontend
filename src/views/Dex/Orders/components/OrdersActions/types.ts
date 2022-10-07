@@ -1,4 +1,4 @@
-import { Percent, Trade } from '@apeswapfinance/sdk'
+import { Percent, Trade } from '@ape.swap/sdk'
 import { RouterTypes } from 'config/constants'
 import { WrapType } from 'hooks/useWrapCallback'
 
@@ -11,7 +11,7 @@ export interface OrdersActionProps {
   priceImpactWithoutFee: Percent
   swapCallbackError: string
   userHasSpecifiedInputOutput: boolean
-  disabled: boolean
+  disabled?: boolean
   routerType: RouterTypes
   onWrap: () => void
   handleSwap: () => void

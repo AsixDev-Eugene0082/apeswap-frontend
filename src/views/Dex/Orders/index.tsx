@@ -1,15 +1,15 @@
 /** @jsxImportSource theme-ui */
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAllTokens, useCurrency } from 'hooks/Tokens'
-import { Field, SwapDelay } from 'state/swap/actions'
+import { Field } from 'state/orders/actions'
 import { Flex, Text, useModal } from '@ape.swap/uikit'
 import { Link } from '@apeswapfinance/uikit'
-import { computeTradePriceBreakdown } from 'utils/prices'
+import { computeLegacyPriceBreakdown } from 'utils/prices'
 import { useHistory } from 'react-router-dom'
 import { useTranslation } from 'contexts/Localization'
-import { CurrencyAmount, JSBI, Token, Trade } from '@apeswapfinance/sdk'
+import { CurrencyAmount, JSBI, Token, Trade } from '@ape.swap/sdk'
 import { useExpertModeManager, useUserSlippageTolerance } from 'state/user/hooks'
-import { useDefaultsFromURLSearch, useDerivedSwapInfo, useSwapActionHandlers, useSwapState } from 'state/swap/hooks'
+import { useDefaultsFromURLSearch, useDerivedSwapInfo, useSwapActionHandlers, useSwapState } from 'state/orders/hooks'
 import useWrapCallback, { WrapType } from 'hooks/useWrapCallback'
 import { useOrderCallback } from 'hooks/useOrderCallback'
 import maxAmountSpend from 'utils/maxAmountSpend'
@@ -65,7 +65,7 @@ const Orders: React.FC = () => {
     })
 
   const [onPresentImportTokenWarningModal] = useModal(
-    <ImportTokenWarningModal tokens={importTokensNotInDefault} onCancel={() => history.push('/orders')} />,
+    <ImportTokenWarningModal tokens={importTokensNotInDefault} onCancel={() => history.push('/limit-orders')} />,
   )
 
   useEffect(() => {
@@ -78,7 +78,7 @@ const Orders: React.FC = () => {
   // for expert mode
   const [isExpertMode] = useExpertModeManager()
 
-  const { INPUT, OUTPUT, independentField, typedValue, recipient, swapDelay, bestRoute } = useSwapState()
+  const { INPUT, OUTPUT, independentField, typedValue, recipient } = useSwapState()
 
   // the callback to execute the swap
   const { onSwitchTokens, onCurrencySelection, onUserInput } = useSwapActionHandlers()
@@ -110,9 +110,7 @@ const Orders: React.FC = () => {
 
   const maxAmountInput: CurrencyAmount | undefined = maxAmountSpend(currencyBalances[Field.INPUT])
 
-  const fetchingBestRoute = swapDelay === SwapDelay.INPUT_DELAY || swapDelay === SwapDelay.LOADING_ROUTE
-
-  const { priceImpactWithoutFee } = computeTradePriceBreakdown(trade)
+  const { priceImpactWithoutFee } = computeLegacyPriceBreakdown(trade)
 
   const [limitOrderPrice, setLimitOrderPrice] = useState<string>('')
   const [inputFocused, setInputFocused] = useState<boolean>(true)
@@ -210,7 +208,7 @@ const Orders: React.FC = () => {
       onAcceptChanges={handleAcceptChanges}
       attemptingTxn={attemptingTxn}
       txHash={txHash}
-      bestRoute={bestRoute}
+      bestRoute={null}
       currencies={currencies}
       orderMarketStatus={orderMarketStatus}
       recipient={recipient}
@@ -254,7 +252,7 @@ const Orders: React.FC = () => {
             fieldType={Field.OUTPUT}
             onCurrencySelect={onCurrencySelection}
             onUserInput={onUserInput}
-            disabled
+            ordersDisabled
           />
           <PriceInputPanel
             value={realPriceValue}
@@ -277,7 +275,7 @@ const Orders: React.FC = () => {
             isExpertMode={isExpertMode}
             showWrap={showWrap}
             wrapType={wrapType}
-            routerType={bestRoute.routerType}
+            routerType={null}
             swapCallbackError={swapCallbackError}
             priceImpactWithoutFee={priceImpactWithoutFee}
             userHasSpecifiedInputOutput={userHasSpecifiedInputOutput}
@@ -285,7 +283,6 @@ const Orders: React.FC = () => {
             handleSwap={handleSwap}
             onPresentConfirmModal={onPresentConfirmModal}
             setSwapState={setSwapState}
-            disabled={fetchingBestRoute}
           />
           <Flex sx={{ justifyContent: 'center', mt: '8px', transform: 'translate(0px, 3px)' }}>
             <Link external href="https://autonomynetwork.io">

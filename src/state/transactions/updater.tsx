@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getEtherscanLink } from 'utils'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
-import { useBlock } from 'state/block/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import { useToast } from 'state/hooks'
 import { AppDispatch, AppState } from '../index'
 import { checkedTransaction, finalizeTransaction } from './actions'
@@ -31,7 +31,7 @@ export function shouldCheck(
 export default function Updater(): null {
   const { library, chainId } = useActiveWeb3React()
 
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
 
   const dispatch = useDispatch<AppDispatch>()
   const state = useSelector<AppState, AppState['transactions']>((s) => s.transactions)

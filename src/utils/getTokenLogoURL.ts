@@ -1,13 +1,13 @@
-import { CHAIN_ID } from 'config/constants/chains'
+import { ChainId } from '@ape.swap/sdk'
 import { getMaticTokenLogoURL } from 'config/constants/maticTokenMapping'
 
 const getTokenLogoURL = (address: string, chainId: any) => {
   let imageURL
-  if (chainId === CHAIN_ID.BSC) {
+  if (chainId === ChainId.BSC) {
     imageURL = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/${address}/logo.png`
-  } else if (chainId === CHAIN_ID.MATIC) {
+  } else if (chainId === ChainId.MATIC) {
     imageURL = getMaticTokenLogoURL(address)
-  } else if (chainId === CHAIN_ID.ETH) {
+  } else if (chainId === ChainId.MAINNET) {
     imageURL = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${address}/logo.png`
   } else {
     imageURL = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${address}/logo.png`

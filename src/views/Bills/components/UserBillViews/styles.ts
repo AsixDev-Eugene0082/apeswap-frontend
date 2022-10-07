@@ -1,5 +1,16 @@
 import { Card, Flex } from '@apeswapfinance/uikit'
 import styled from '@emotion/styled'
+import { ThemeUIStyleObject } from 'theme-ui'
+
+export const styles: Record<string, ThemeUIStyleObject> = {
+  links: {
+    alignItems: 'center',
+    display: 'flex',
+    width: 'max-content',
+    justifyContent: 'space-between',
+    marginBottom: '0.3em',
+  },
+}
 
 export const CardContainer = styled(Card)`
   display: flex;

@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js'
 import styled from 'styled-components'
 import { Text, Card, Checkbox } from '@apeswapfinance/uikit'
 import { partition } from 'lodash'
-import { useNfaStakingPools, usePollNfaStakingData } from 'state/hooks'
+import { useSetNfaStakingPools, usePollNfaStakingData, useNfaStakingPools } from 'state/nfaStakingPools/hooks'
 import Page from 'components/layout/Page'
 import Banner from 'components/Banner'
 import { useTranslation } from 'contexts/Localization'
@@ -171,6 +171,7 @@ const FlexLayout = styled.div`
 `
 
 const NfaStaking: React.FC = () => {
+  useSetNfaStakingPools()
   usePollNfaStakingData()
   const [stakedOnly, setStakedOnly] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')

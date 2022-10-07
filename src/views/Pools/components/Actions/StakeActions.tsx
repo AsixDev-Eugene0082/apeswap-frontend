@@ -8,13 +8,17 @@ import { useSousUnstake } from 'hooks/useUnstake'
 import useIsMobile from 'hooks/useIsMobile'
 import { useToast } from 'state/hooks'
 import { useAppDispatch } from 'state'
-import { getEtherscanLink } from 'utils'
+import { getEtherscanLink, showCircular } from 'utils'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import ListViewContent from 'components/ListViewContent'
 import { useTranslation } from 'contexts/Localization'
 import DepositModal from '../Modals/DepositModal'
 import WithdrawModal from '../Modals/WithdrawModal'
 import { ActionContainer, CenterContainer, SmallButtonSquare, StyledButtonSquare } from './styles'
+import { useCurrency } from 'hooks/Tokens'
+import { useBananaAddress } from 'hooks/useAddress'
+import { useIsModalShown } from 'state/user/hooks'
+import { useHistory } from 'react-router-dom'
 
 interface StakeActionsProps {
   stakingTokenBalance: string
@@ -22,6 +26,7 @@ interface StakeActionsProps {
   stakedBalance: string
   stakeTokenValueUsd: number
   sousId: number
+  earnTokenSymbol: string
 }
 
 const StakeAction: React.FC<StakeActionsProps> = ({
@@ -30,6 +35,7 @@ const StakeAction: React.FC<StakeActionsProps> = ({
   stakedBalance,
   stakeTokenValueUsd,
   sousId,
+  earnTokenSymbol,
 }) => {
   const rawStakedBalance = getBalanceNumber(new BigNumber(stakedBalance))
   const dispatch = useAppDispatch()
@@ -47,6 +53,13 @@ const StakeAction: React.FC<StakeActionsProps> = ({
   const { onStake } = useSousStake(sousId)
   const { onUnstake } = useSousUnstake(sousId)
   const { t } = useTranslation()
+  const bananaToken = useCurrency(useBananaAddress())
+  const { showPoolHarvestModal } = useIsModalShown()
+  const history = useHistory()
+
+  const harvestBanana = earnTokenSymbol === bananaToken.symbol
+  const displayPHCircular = () =>
+    showPoolHarvestModal && harvestBanana && showCircular(chainId, history, '?modal=circular-gh')
 
   const [onPresentDeposit] = useModal(
     <DepositModal
@@ -85,6 +98,7 @@ const StakeAction: React.FC<StakeActionsProps> = ({
               text: t('View Transaction'),
               url: getEtherscanLink(trxHash, 'transaction', chainId),
             })
+            if (trxHash) displayPHCircular()
           })
           .catch((e) => {
             console.error(e)

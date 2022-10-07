@@ -1,6 +1,5 @@
 /** @jsxImportSource theme-ui */
-import { Text } from '@ape.swap/uikit'
-import { useModal } from '@apeswapfinance/uikit'
+import { Svg, Text, useModal } from '@ape.swap/uikit'
 import BigNumber from 'bignumber.js'
 import ListView from 'components/ListView'
 import { ExtendedListViewProps } from 'components/ListView/types'
@@ -16,12 +15,13 @@ import { useTranslation } from 'contexts/Localization'
 import { Vault } from 'state/types'
 import { getBalanceNumber } from 'utils/formatBalance'
 import { NextArrow } from 'views/Farms/components/styles'
-import { LiquidityModal } from 'components/LiquidityWidget'
 import { Container, StyledButton, ActionContainer, StyledTag } from './styles'
 import { vaultTokenDisplay } from '../helpers'
 import Actions from './Actions'
 import HarvestAction from './Actions/HarvestAction'
 import InfoContent from './InfoContent'
+import DualLiquidityModal from 'components/DualAddLiquidity/DualLiquidityModal'
+import { selectOutputCurrency } from '../../../state/zap/actions'
 
 const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults, openId }) => {
   const { chainId } = useActiveWeb3React()
@@ -31,18 +31,9 @@ const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults,
   const isActive = !pathname.includes('history')
   const { t } = useTranslation()
 
-  // TODO: clean up this code
-  // Hack to get the close modal function from the provider
-  // Need to export ModalContext from uikit to clean up the code
-  const [, closeModal] = useModal(<></>)
-  const [onPresentAddLiquidityWidgetModal] = useModal(
-    <LiquidityModal handleClose={closeModal} />,
-    true,
-    true,
-    'liquidityWidgetModal',
-  )
+  const [onPresentAddLiquidityWidgetModal] = useModal(<DualLiquidityModal />, true, true, 'dualLiquidityModal')
 
-  const showLiquidity = (token, quoteToken) => {
+  const showLiquidity = (token, quoteToken, vault) => {
     dispatch(
       selectCurrency({
         field: Field.INPUT,
@@ -55,11 +46,17 @@ const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults,
         currencyId: quoteToken,
       }),
     )
+    dispatch(
+      selectOutputCurrency({
+        currency1: vault.token.address[chainId],
+        currency2: vault.quoteToken.address[chainId],
+      }),
+    )
     onPresentAddLiquidityWidgetModal()
   }
 
   const vaultsListView = vaults.map((vault) => {
-    const totalDollarAmountStaked = parseFloat(vault?.totalStaked) * vault?.stakeTokenPrice
+    const totalDollarAmountStaked = Math.round(parseFloat(vault?.totalStaked) * vault?.stakeTokenPrice * 100) / 100
     const liquidityUrl = `https://apeswap.finance/swap/`
     const userAllowance = vault?.userData?.allowance
     const userEarnings = getBalanceNumber(new BigNumber(vault?.userData?.pendingRewards) || new BigNumber(0))
@@ -89,7 +86,10 @@ const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults,
       titleContainerWidth: 400,
       id: vault.id,
       infoContent: <InfoContent vault={vault} />,
-      infoContentPosition: 'translate(-82%, 28%)',
+      infoContentPosition: 'translate(8%, 0%)',
+      ttWidth: '250px',
+      toolTipIconWidth: isMobile && '20px',
+      toolTipStyle: isMobile && { marginTop: '10px', marginRight: '10px' },
       expandedContentJustified: vault.version === 'V1' && 'center',
       open: openId === vault.id,
       cardContent: (
@@ -102,7 +102,7 @@ const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults,
               'Daily APY includes BANANA rewards (calculated based on token value, reward rate, and percentage of vault owned) and DEX swap fees, compounded daily.',
             )}
             toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0, 40%)"
+            toolTipTransform="translate(25%, 0%)"
             height={50}
           />
           <ListViewContent
@@ -113,7 +113,7 @@ const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults,
               'Annual APY includes annualized BANANA rewards (calculated based on token value, reward rate, and percentage of vault owned) and DEX swap fees, compounded daily.',
             )}
             toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0, 40%)"
+            toolTipTransform="translate(28%, 0%)"
             height={50}
           />
           <ListViewContent
@@ -121,8 +121,8 @@ const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults,
             value={`$${totalDollarAmountStaked.toLocaleString(undefined)}`}
             width={isMobile ? 100 : 170}
             toolTip={t('The total value of the tokens currently staked in this vault.')}
-            toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0%, 75%)"
+            toolTipPlacement="bottomRight"
+            toolTipTransform="translate(13%, 0%)"
             height={50}
           />
           <ListViewContent
@@ -157,10 +157,11 @@ const DisplayVaults: React.FC<{ vaults: Vault[]; openId?: number }> = ({ vaults,
                   showLiquidity(
                     vault.token.symbol === 'BNB' ? 'ETH' : vault.token.address[chainId],
                     vault.quoteToken.symbol === 'BNB' ? 'ETH' : vault.quoteToken.address[chainId],
+                    vault,
                   )
                 }
               >
-                GET LP
+                {t('GET LP')} <Svg icon="ZapIcon" color="primaryBright" />
               </StyledButton>
             ) : (
               <a href={liquidityUrl} target="_blank" rel="noopener noreferrer">

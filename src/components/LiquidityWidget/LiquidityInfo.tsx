@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import React from 'react'
-import { Currency, Percent, Price } from '@apeswapfinance/sdk'
+import { Currency, Percent, Price } from '@ape.swap/sdk'
 import { Text, Flex, Box } from 'theme-ui'
 import { ONE_BIPS } from 'config/constants'
 import { Field } from 'state/mint/actions'

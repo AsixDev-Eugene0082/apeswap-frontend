@@ -1,34 +1,21 @@
-import { useEffect, useMemo } from 'react'
-import BigNumber from 'bignumber.js'
+import { useEffect, useMemo, useState } from 'react'
+import { ChainId } from '@ape.swap/sdk'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { Toast, toastTypes } from '@apeswapfinance/uikit'
 import { useSelector } from 'react-redux'
 import useRefresh from 'hooks/useRefresh'
-import { useLiquidityData } from 'hooks/api'
-import { useAccountTokenBalance } from 'hooks/useTokenBalance'
-import { CHAIN_ID } from 'config/constants/chains'
-import { useBananaAddress, useTreasuryAddress } from 'hooks/useAddress'
 import { useAppDispatch } from 'state'
 import useSwitchNetwork from 'hooks/useSelectNetwork'
-import {
-  fetchPoolsPublicDataAsync,
-  fetchPoolsUserDataAsync,
-  push as pushToast,
-  remove as removeToast,
-  clear as clearToast,
-} from './actions'
+import { push as pushToast, remove as removeToast, clear as clearToast } from './actions'
 import {
   State,
-  Pool,
   ProfileState,
   StatsState,
   StatsOverallState,
   FarmOverall,
   AuctionsState,
-  TokenPricesState,
   IazosState,
   Iazo,
-  NfaStakingPool,
   HomepageData,
   LpTokenPricesState,
   NfaState,
@@ -38,7 +25,6 @@ import {
   ServiceData,
   FarmLpAprsType,
 } from './types'
-import { fetchNfaStakingPoolsPublicDataAsync, fetchNfaStakingPoolsUserDataAsync } from './nfaStakingPools'
 import { fetchProfile } from './profile'
 import {
   fetchFarmLpAprs,
@@ -49,16 +35,16 @@ import {
   fetchHomepageTokenData,
   fetchLiveIfoStatus,
   fetchLiveTags,
+  fetchLiveOrdering,
 } from './stats'
 import { fetchAuctions } from './auction'
 import { setVaultsLoad } from './vaults'
-import { fetchTokenPrices } from './tokenPrices'
 import { fetchIazo, fetchIazos, fetchSettings } from './iazos'
 import { fetchUserNetwork } from './network'
-import { fetchLpTokenPrices } from './lpPrices'
 import { fetchAllNfas } from './nfas'
-
-const ZERO = new BigNumber(0)
+import { useFetchTokenPrices } from './tokenPrices/hooks'
+import { useBabContract, useRaffleContract } from 'hooks/useContract'
+import { useWeb3React } from '@web3-react/core'
 
 // Network
 
@@ -88,140 +74,6 @@ export const useUpdateNetwork = () => {
     dispatch(setVaultsLoad(false))
   }, [chainId, account, appChainId, chainIdFromUrl, switchNetwork, dispatch])
 }
-
-// Fetch public pool and farm data
-
-export const usePollPools = () => {
-  const chainId = useNetworkChainId()
-  const { tokenPrices } = useTokenPrices()
-  const dispatch = useAppDispatch()
-  useEffect(() => {
-    if (chainId === CHAIN_ID.BSC) {
-      dispatch(fetchPoolsPublicDataAsync(chainId, tokenPrices))
-    }
-  }, [dispatch, tokenPrices, chainId])
-}
-
-// Pools
-
-export const usePools = (account): Pool[] => {
-  const { slowRefresh } = useRefresh()
-  const dispatch = useAppDispatch()
-  const { chainId } = useActiveWeb3React()
-  useEffect(() => {
-    if (account && (chainId === CHAIN_ID.BSC || chainId === CHAIN_ID.BSC_TESTNET)) {
-      dispatch(fetchPoolsUserDataAsync(chainId, account))
-    }
-  }, [account, dispatch, slowRefresh, chainId])
-
-  const pools = useSelector((state: State) => state.pools.data)
-  return pools
-}
-
-export const usePoolFromPid = (sousId): Pool => {
-  const pool = useSelector((state: State) => state.pools.data.find((p) => p.sousId === sousId))
-  return pool
-}
-
-export const useGnanaPools = (account): Pool[] => {
-  const pools = usePools(account).filter((pool) => pool.stakingToken.symbol === 'GNANA')
-  return pools
-}
-
-export const useAllPools = (): Pool[] => {
-  const pools = useSelector((state: State) => state.pools.data)
-  return pools
-}
-
-// NfaStakingPools
-
-export const usePollNfaStakingData = () => {
-  const { slowRefresh } = useRefresh()
-  const { account } = useActiveWeb3React()
-  const dispatch = useAppDispatch()
-  const chainId = useNetworkChainId()
-  const { tokenPrices } = useTokenPrices()
-  useEffect(() => {
-    dispatch(fetchNfaStakingPoolsPublicDataAsync(chainId, tokenPrices))
-    if (account) {
-      dispatch(fetchNfaStakingPoolsUserDataAsync(chainId, account))
-    }
-  }, [account, dispatch, chainId, tokenPrices, slowRefresh])
-}
-
-export const useNfaStakingPools = (): NfaStakingPool[] => {
-  const nfaStakingPools = useSelector((state: State) => state.nfaStakingPools.data)
-  return nfaStakingPools
-}
-
-export const useNfaStakingPoolFromPid = (sousId): NfaStakingPool => {
-  const nfaStakingPool = useSelector((state: State) => state.nfaStakingPools.data.find((p) => p.sousId === sousId))
-  return nfaStakingPool
-}
-
-export const useAllNfaStakingPools = (): NfaStakingPool[] => {
-  const nfaStakingPools = useSelector((state: State) => state.nfaStakingPools.data)
-  return nfaStakingPools
-}
-
-// TVL
-export const useTvl = (): BigNumber => {
-  const pools = useAllPools()
-  const bananaPriceBUSD = usePriceBananaBusd()
-  const liquidity = useLiquidityData()
-  const bananaAtTreasoury = useAccountTokenBalance(useTreasuryAddress(), useBananaAddress())
-  let valueLocked = new BigNumber(0)
-
-  valueLocked = valueLocked.plus(new BigNumber(bananaAtTreasoury).div(new BigNumber(10).pow(18)).times(bananaPriceBUSD))
-
-  // eslint-disable-next-line no-restricted-syntax
-  for (const pool of pools) {
-    if (pool?.stakingToken?.symbol === 'BANANA') {
-      valueLocked = valueLocked.plus(
-        new BigNumber(pool.totalStaked).div(new BigNumber(10).pow(18)).times(bananaPriceBUSD),
-      )
-    }
-  }
-  return valueLocked.plus(liquidity)
-
-  // eslint-disable-next-line no-restricted-syntax
-  /* for (const farm of farms) {
-    const totalInQuoteToken = new BigNumber(farm.totalInQuoteToken)
-    if (farm.quoteTokenSymbol === 'BNB') valueLocked = valueLocked.plus(totalInQuoteToken.times(bnbPriceUSD))
-    else if (farm.quoteTokenSymbol === 'BUSD') valueLocked = valueLocked.plus(totalInQuoteToken)
-    else if (farm.quoteTokenSymbol === 'BANANA')
-      valueLocked = valueLocked.plus(totalInQuoteToken.times(bananaPriceBUSD))
-  }
-  return valueLocked
-  */
-}
-
-// Prices
-
-export const usePriceBananaBusd = (): BigNumber => {
-  const tokenPrices = useTokenPrices()
-  const price = new BigNumber(tokenPrices?.tokenPrices?.find((token) => token.symbol === 'BANANA')?.price)
-  return price || ZERO
-}
-
-export const usePriceBnbBusd = (): BigNumber => {
-  const tokenPrices = useTokenPrices()
-  const price = new BigNumber(tokenPrices?.tokenPrices?.find((token) => token.symbol === 'BNB')?.price)
-  return price || ZERO
-}
-
-export const usePriceGnanaBusd = (): BigNumber => {
-  const bananaPrice = usePriceBananaBusd()
-  return bananaPrice.times(1.3889)
-}
-
-/*
-  // TODO Revisit this 
-  const pid = BANANA_POOL_PID // BANANA-BNB LP
-  const bnbPriceUSD = usePriceBnbBusd()
-  const farm = useFarmFromPid(pid)
-  return farm.tokenPriceVsQuote ? bnbPriceUSD.times(farm.tokenPriceVsQuote) : ZERO
-  */
 
 // Toasts
 export const useToast = () => {
@@ -282,7 +134,7 @@ export const useFetchProfile = () => {
   const getNfas = !!account
   useFetchNfas(getNfas)
   const dispatch = useAppDispatch()
-  const chainId = CHAIN_ID.BSC
+  const chainId = ChainId.BSC
   const { slowRefresh } = useRefresh()
   const { nfas } = useNfas()
 
@@ -400,7 +252,7 @@ export const useFetchAuctions = () => {
   const { nfas } = useNfas()
 
   useEffect(() => {
-    if (chainId === CHAIN_ID.BSC || chainId === CHAIN_ID.BSC_TESTNET) {
+    if (chainId === ChainId.BSC || chainId === ChainId.BSC_TESTNET) {
       dispatch(fetchAuctions(nfas, chainId))
     }
   }, [dispatch, fastRefresh, nfas, chainId])
@@ -412,6 +264,7 @@ export const useAuctions = () => {
 }
 
 export const useFetchIazoSettings = () => {
+  useFetchTokenPrices()
   const dispatch = useAppDispatch()
   const chainId = useNetworkChainId()
   const { slowRefresh } = useRefresh()
@@ -421,6 +274,7 @@ export const useFetchIazoSettings = () => {
 }
 
 export const useFetchIazos = () => {
+  useFetchTokenPrices()
   const dispatch = useAppDispatch()
   const chainId = useNetworkChainId()
   const { slowRefresh } = useRefresh()
@@ -430,6 +284,7 @@ export const useFetchIazos = () => {
 }
 
 export const useFetchIazo = (address: string) => {
+  useFetchTokenPrices()
   const dispatch = useAppDispatch()
   const chainId = useNetworkChainId()
   const { fastRefresh } = useRefresh()
@@ -453,20 +308,6 @@ export const useIazoFromAddress = (address): Iazo => {
   return iazo
 }
 
-export const useFetchTokenPrices = () => {
-  const dispatch = useAppDispatch()
-  const { slowRefresh } = useRefresh()
-  const { chainId } = useActiveWeb3React()
-  useEffect(() => {
-    dispatch(fetchTokenPrices(chainId))
-  }, [dispatch, slowRefresh, chainId])
-}
-
-export const useTokenPrices = () => {
-  const { isInitialized, isLoading, data }: TokenPricesState = useSelector((state: State) => state.tokenPrices)
-  return { tokenPrices: data, isInitialized, isLoading }
-}
-
 export const useFetchNfas = (nafFlag = true) => {
   const dispatch = useAppDispatch()
   const chainId = useNetworkChainId()
@@ -477,18 +318,115 @@ export const useFetchNfas = (nafFlag = true) => {
   }, [dispatch, nafFlag, chainId])
 }
 
+export const useFetchBabToken = () => {
+  const [loading, setIsLoading] = useState(true)
+  const [tokenId, setTokenId] = useState(undefined)
+  const [holdsBab, setHoldsBab] = useState(false)
+
+  const { account } = useWeb3React()
+  const babContract = useBabContract()
+
+  useEffect(() => {
+    setIsLoading(true)
+    setHoldsBab(false)
+    const fetchBabId = async () => {
+      try {
+        const balance = await babContract.balanceOf(account)
+        if (balance > 0) {
+          setHoldsBab(true)
+          const tokenId = await babContract.tokenIdOf(account)
+          setTokenId(tokenId)
+        }
+      } catch (e) {
+        console.warn('Something went wrong fetching BAB balance')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    if (account) fetchBabId()
+    else setIsLoading(false)
+  }, [babContract, account])
+  return { tokenId, loading, holdsBab }
+}
+
+export const useClaimRaffle = () => {
+  const [claiming, setIsClaiming] = useState(false)
+  const [hasClaimed, setHasClaimed] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { account } = useWeb3React()
+
+  const raffleContract = useRaffleContract()
+  const claim = async (tokenId: number) => {
+    setIsClaiming(true)
+    await raffleContract.mint(tokenId)
+    setIsClaiming(false)
+    setHasClaimed(true)
+  }
+
+  useEffect(() => {
+    const fetchClaimed = async () => {
+      try {
+        setIsLoading(true)
+        const balance = await raffleContract.balanceOf(account)
+        setHasClaimed(balance > 0)
+      } catch {
+        console.warn('Something went wrong fetching Raffle balance')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    if (account) fetchClaimed()
+  }, [account, raffleContract])
+  return { claiming, claim, hasClaimed, isLoading }
+}
+
+export const useWonRaffles = () => {
+  const [claiming, setIsClaiming] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [userWins, setUserWins] = useState([])
+  const [userWon, setUserWon] = useState(false)
+  const [userClaimed, setUserClaimed] = useState(false)
+  const { account } = useWeb3React()
+
+  const raffleContract = useRaffleContract()
+  const claim = async (winId: number) => {
+    setIsClaiming(true)
+    await raffleContract.claim(winId)
+    setIsClaiming(false)
+  }
+
+  useEffect(() => {
+    const fetchWinStatus = async () => {
+      try {
+        setIsLoading(true)
+        const result = await raffleContract.getUserWins(account)
+        if (result.length > 0) {
+          const userWinsResult = [
+            {
+              id: result[1][0].toNumber(),
+              prizeTokenId: result[0][0].prizeTokenId.toNumber(),
+              claimed: result[0][0].claimed,
+              tokenId: result[0][0].tokenId.toNumber(),
+            },
+          ]
+          setUserWins(userWinsResult)
+          setUserClaimed(userWinsResult[0].claimed)
+        }
+        setUserWon(result.length > 0)
+      } catch {
+        console.warn('Something went wrong fetching Raffle balance')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    if (account) fetchWinStatus()
+  }, [account, raffleContract])
+  return { claiming, claim, userWins, isLoading, userWon, userClaimed }
+}
+
 export const useNfas = () => {
   const { isInitialized, isLoading, data }: NfaState = useSelector((state: State) => state.nfas)
   return { nfas: data, isInitialized, isLoading }
-}
-
-export const useFetchLpTokenPrices = () => {
-  const dispatch = useAppDispatch()
-  const { slowRefresh } = useRefresh()
-  const { chainId } = useActiveWeb3React()
-  useEffect(() => {
-    dispatch(fetchLpTokenPrices(chainId))
-  }, [dispatch, slowRefresh, chainId])
 }
 
 export const useLpTokenPrices = () => {
@@ -545,22 +483,16 @@ export const useLiveIfoStatus = () => {
   return { liveIfos: LiveIfo }
 }
 
-// TAGS
-export const useFetchLiveTags = () => {
+export const useFetchLiveTagsAndOrdering = () => {
   const dispatch = useAppDispatch()
   const { slowRefresh } = useRefresh()
   useEffect(() => {
+    dispatch(fetchLiveOrdering())
     dispatch(fetchLiveTags())
   }, [dispatch, slowRefresh])
 }
 
-export const useFarmTags = (chainId: number) => {
-  const { Tags }: StatsState = useSelector((state: State) => state.stats)
-  const farmTags = Tags?.[`${chainId}`].farms
-
-  return { farmTags }
-}
-
+// TAGS
 export const usePoolTags = (chainId: number) => {
   const { Tags }: StatsState = useSelector((state: State) => state.stats)
   const poolTags = Tags?.[`${chainId}`]?.pools

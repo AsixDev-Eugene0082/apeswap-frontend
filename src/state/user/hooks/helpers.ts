@@ -1,4 +1,4 @@
-import { Token } from '@apeswapfinance/sdk'
+import { Token } from '@ape.swap/sdk'
 import { SerializedToken } from 'config/constants/types'
 import { parseUnits } from 'ethers/lib/utils'
 

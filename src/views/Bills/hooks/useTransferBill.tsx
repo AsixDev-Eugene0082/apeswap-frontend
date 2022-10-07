@@ -3,13 +3,13 @@ import { useBillNftContract } from 'hooks/useContract'
 import { userTransferBillNft } from 'utils/callHelpers'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import track from 'utils/track'
-import { getBillType } from './getBillType'
+import { useBillType } from './useBillType'
 
 // Transfer a bill
 const useTransferBill = (billNftAddress: string, billId: string, toAddress: string) => {
   const { account, chainId } = useActiveWeb3React()
   const billNftContract = useBillNftContract(billNftAddress)
-  const billType: string = getBillType(billNftAddress, chainId)
+  const billType: string = useBillType(billNftAddress)
   const handleTransfer = useCallback(async () => {
     try {
       const tx = await userTransferBillNft(billNftContract, billId, account, toAddress)

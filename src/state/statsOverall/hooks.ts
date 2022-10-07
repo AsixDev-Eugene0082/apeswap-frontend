@@ -1,12 +1,12 @@
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useBananaAddress } from 'hooks/useAddress'
 import useRefresh from 'hooks/useRefresh'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useAppDispatch } from 'state'
-import { useBlock } from 'state/block/hooks'
 import { useFarms } from 'state/farms/hooks'
-import { usePools } from 'state/hooks'
+import { usePools } from 'state/pools/hooks'
 import { fetchStats } from 'state/stats'
 import { State, StatsOverallState, StatsState } from 'state/types'
 import { useTokenBalance } from 'state/wallet/hooks'
@@ -33,7 +33,7 @@ export const useFetchStats = () => {
   const { account } = useActiveWeb3React()
   const dispatch = useAppDispatch()
   const { statsOverall } = useStatsOverall()
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const farms = useFarms(account)
   const pools = usePools(account)
   const { slowRefresh } = useRefresh()

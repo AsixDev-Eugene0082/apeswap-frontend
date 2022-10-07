@@ -9,6 +9,7 @@ export const FarmButton = styled(Button)`
   padding: 10px 20px;
   min-width: 129px;
   height: 44px;
+  justify-content: space-evenly;
 `
 
 export const NextArrow = styled(ArrowDropUpIcon)`

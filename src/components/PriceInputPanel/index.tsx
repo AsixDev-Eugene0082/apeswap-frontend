@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Currency } from '@apeswapfinance/sdk'
+import { Currency } from '@ape.swap/sdk'
 import { Text, Flex } from '@apeswapfinance/uikit'
 import styled from 'styled-components'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'

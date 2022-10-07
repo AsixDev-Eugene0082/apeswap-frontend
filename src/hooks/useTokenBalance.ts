@@ -12,7 +12,6 @@ const useTokenBalance = (tokenAddress: string) => {
   const [balance, setBalance] = useState(new BigNumber(0))
   const { account, library, chainId } = useActiveWeb3React()
   const { fastRefresh } = useRefresh()
-
   useEffect(() => {
     const fetchBalance = async () => {
       const tokenContract = getContract(erc20ABI, tokenAddress, chainId, library)
@@ -20,7 +19,7 @@ const useTokenBalance = (tokenAddress: string) => {
       setBalance(new BigNumber(res))
     }
 
-    if (account && library) {
+    if (account && library && tokenAddress) {
       fetchBalance()
     }
   }, [account, library, tokenAddress, fastRefresh, chainId])

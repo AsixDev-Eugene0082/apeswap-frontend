@@ -1,7 +1,7 @@
 import { Flex } from '@apeswapfinance/uikit'
 import { useLocation } from 'react-router-dom'
 import React, { useState } from 'react'
-import { usePollBills, useBills, usePollUserBills } from 'state/bills/hooks'
+import { usePollBills, useBills, usePollUserBills, useSetBills } from 'state/bills/hooks'
 import { Bills as BillType } from 'state/types'
 import ListViewLayout from 'components/layout/ListViewLayout'
 import Banner from 'components/Banner'
@@ -9,10 +9,15 @@ import { useTranslation } from 'contexts/Localization'
 import BillsListView from './components/BillsListView'
 import UserBillViews from './components/UserBillViews'
 import BillMenu from './components/Menu'
+import { BannerTypes } from 'components/Banner/types'
+import { useSetZapOutputList } from 'state/zap/hooks'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 
 const Bills: React.FC = () => {
+  useSetBills()
   usePollBills()
   usePollUserBills()
+  const { chainId } = useActiveWeb3React()
   const bills = useBills()
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -49,6 +54,15 @@ const Bills: React.FC = () => {
 
     return billsToReturn
   }
+  // Set zap output list to match dual farms
+  useSetZapOutputList(
+    renderBills(false)?.map((bill) => {
+      return {
+        currencyIdA: bill?.token.address[chainId],
+        currencyIdB: bill?.quoteToken.address[chainId],
+      }
+    }),
+  )
 
   return (
     <>
@@ -61,7 +75,7 @@ const Bills: React.FC = () => {
       >
         <ListViewLayout>
           <Banner
-            banner="treasury-bills"
+            banner={`${chainId}-treasury-bills` as BannerTypes}
             title={t('Treasury Bills')}
             link="https://apeswap.gitbook.io/apeswap-finance/product-and-features/raise/treasury-bills"
             listViewBreak

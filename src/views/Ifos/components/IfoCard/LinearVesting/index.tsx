@@ -5,20 +5,20 @@ import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import BigNumber from 'bignumber.js'
 import { BSC_BLOCK_TIME } from 'config'
 import { Ifo, IfoStatus } from 'config/constants/types'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import multicall from 'utils/multicall'
-import { useBlock } from 'state/block/hooks'
-import { usePriceBnbBusd, usePriceGnanaBusd } from 'state/hooks'
+import { usePriceBnbBusd, usePriceGnanaBusd } from 'state/tokenPrices/hooks'
 import { useSafeIfoContract } from 'hooks/useContract'
 import getTimePeriods from 'utils/getTimePeriods'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { Toggle } from '@apeswapfinance/uikit'
+import { Tab, Tabs } from '@ape.swap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import IfoCardHeader from '../CardHeader/IfoCardHeader'
 import IfoCardProgress from '../CardProgress/IfoCardProgress'
 import IfoCardDetails from '../CardDetails/IfoCardDetails'
 import IfoCardContribute from './IfoCardContribute'
 import useUserInfo from './useUserInfo'
-import { Container, UnlockButton, Wrapper } from './styles'
+import { Container, styles, SubContainer, UnlockButton, Wrapper } from './styles'
 
 export interface IfoCardProps {
   ifo: Ifo
@@ -42,6 +42,19 @@ const getStatus = (currentBlock: number, startBlock: number, endBlock: number): 
   return null
 }
 
+const initialState = {
+  isLoading: true,
+  status: null,
+  blocksRemaining: 0,
+  secondsUntilStart: 0,
+  vestingEndBlock: 0,
+  secondsUntilEnd: 0,
+  raisingAmount: new BigNumber(0),
+  totalAmount: new BigNumber(0),
+  startBlockNum: 0,
+  endBlockNum: 0,
+}
+
 const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
   const {
     id,
@@ -57,31 +70,21 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
     startBlock: start,
     offeringCurrency,
   } = ifo
-  const [state, setState] = useState({
-    isLoading: true,
-    status: null,
-    blocksRemaining: 0,
-    secondsUntilStart: 0,
-    vestingEndBlock: 0,
-    secondsUntilEnd: 0,
-    raisingAmount: new BigNumber(0),
-    totalAmount: new BigNumber(0),
-    startBlockNum: 0,
-    endBlockNum: 0,
-  })
+  const [state, setState] = useState(initialState)
   const { account, chainId } = useActiveWeb3React()
   const contract = useSafeIfoContract(address, true)
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const bnbPrice = usePriceBnbBusd()
   const gnanaPrice = usePriceGnanaBusd()
   const { t } = useTranslation()
   const currencyPrice = gnana ? gnanaPrice : bnbPrice
-  const [statsType, setStatsType] = useState(0)
+  const [statsType, setStatsType] = useState(1)
 
   useEffect(() => {
     const fetchProgress = async () => {
       if (!address) {
         // Allow IAO details to be shown before contracts are deployed
+        setState(initialState)
         return
       }
 
@@ -116,7 +119,6 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
       const startBlockNum = start || parseInt(startBlock, 10)
       const endBlockNum = parseInt(endBlock, 10)
       const vestingEndBlockNum = parseInt(vestingEndBlock, 10)
-
       const status = getStatus(currentBlock, startBlockNum, endBlockNum)
       const blocksRemaining = endBlockNum - currentBlock
 
@@ -182,6 +184,9 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
         : 100
   }
 
+  const vestedValueAmount = amount - refundingAmount
+  const vestedValueDollar = (getBalanceNumber(new BigNumber(currencyPrice), 0) * vestedValueAmount).toFixed(2)
+
   const stats = React.useMemo(() => {
     let texts = [
       { label: t('For sale'), value: saleAmount },
@@ -191,8 +196,6 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
     if (vestingTime) texts.push({ label: t('Total vesting time'), value: vestingTime })
 
     if (isFinished && statsType === 0 && amount > 0) {
-      const vestedValueAmount = amount - refundingAmount
-      const vestedValueDollar = (getBalanceNumber(currencyPrice, 0) * vestedValueAmount).toFixed(2)
       texts = [
         {
           label: t('Tokens available'),
@@ -202,7 +205,9 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
         { label: t('Tokens harvested'), value: Number(offeringTokensClaimed).toFixed(4) },
         {
           label: t('Committed value'),
-          value: `${Number(vestedValueAmount).toFixed(4)} ${currency} (~$${vestedValueDollar})`,
+          value: `${Number(vestedValueAmount).toFixed(3)} ${currency} (~$${
+            vestedValueDollar === 'NaN' ? 0 : vestedValueDollar
+          })`,
         },
       ]
 
@@ -218,71 +223,90 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
     }
     return texts
   }, [
+    t,
     saleAmount,
     raiseAmount,
     vestingTime,
     isFinished,
-    hasStarted,
+    statsType,
     amount,
-    refundingAmount,
-    currencyPrice,
+    hasStarted,
     userTokenStatus.offeringTokenTotalHarvest,
     userTokenStatus.offeringTokensVesting,
     offeringTokensClaimed,
+    vestedValueAmount,
     currency,
+    vestedValueDollar,
     state.totalAmount,
     state.raisingAmount,
-    statsType,
-    t,
   ])
 
   return (
     <Container>
-      <IfoCardHeader
-        ifoId={id}
-        gnana={gnana}
-        isComingSoon={!address}
-        isLoading={state.isLoading}
-        status={state.status}
-        secondsUntilStart={state.secondsUntilStart}
-        secondsUntilEnd={state.secondsUntilEnd}
-      />
-
-      <IfoCardProgress progress={progress} amountLabel={progressBarAmountLabel} timeLabel={progressBarTimeLabel} />
-
-      {!account ? (
-        <UnlockButton
-          sx={{ alignSelf: 'center', fontWeight: 600, fontSize: '16px', margin: '0 auto 12px', width: '220px' }}
+      <SubContainer>
+        <IfoCardHeader
+          ifoId={id}
+          gnana={gnana}
+          isComingSoon={!address}
+          isLoading={state.isLoading}
+          status={state.status}
+          secondsUntilStart={state.secondsUntilStart}
+          secondsUntilEnd={state.secondsUntilEnd}
         />
-      ) : (
-        (isActive || isFinished) &&
-        vesting && (
-          <IfoCardContribute
-            account={account}
-            address={address}
-            currency={currency}
-            currencyAddress={currencyAddress}
-            amountContributed={amount}
-            tokenDecimals={tokenDecimals}
-            refunded={refunded}
-            isActive={isActive}
-            isFinished={isFinished}
-            userTokenStatus={userTokenStatus}
+
+        <IfoCardProgress progress={progress} amountLabel={progressBarAmountLabel} timeLabel={progressBarTimeLabel} />
+
+        {!account ? (
+          <UnlockButton
+            sx={{ alignSelf: 'center', fontWeight: 600, fontSize: '16px', margin: '0 auto 12px', width: '220px' }}
           />
-        )
-      )}
-      {amount !== 0 && isFinished && (
-        <Wrapper>
-          <Toggle
-            size="md"
-            labels={[t('MY STATS'), t('OVERALL STATS')]}
-            onClick={() => {
-              setStatsType(statsType === 0 ? 1 : 0)
-            }}
-          />
-        </Wrapper>
-      )}
-      <IfoCardDetails stats={stats} />
+        ) : (
+          (isActive || isFinished) &&
+          vesting && (
+            <IfoCardContribute
+              account={account}
+              address={address}
+              currency={currency}
+              currencyAddress={currencyAddress}
+              amountContributed={amount}
+              tokenDecimals={tokenDecimals}
+              refunded={refunded}
+              isActive={isActive}
+              isFinished={isFinished}
+              userTokenStatus={userTokenStatus}
+              vestedValueDollar={vestedValueDollar}
+            />
+          )
+        )}
+      </SubContainer>
+      <SubContainer sx={{ minHeight: '181px' }}>
+        {isFinished && (
+          <Wrapper>
+            <Tabs activeTab={statsType} sx={{ button: { padding: '4px 8px', minWidth: '120px', fontSize: '12px' } }}>
+              <Tab
+                index={0}
+                label={t('MY STATS')}
+                onClick={() => setStatsType(0)}
+                size="sm"
+                variant="centered"
+                disabled={amount === 0}
+                style={{ fontSize: '12px' }}
+                sx={styles.tab}
+              />
+              <Tab
+                index={1}
+                label={t('OVERALL STATS')}
+                onClick={() => setStatsType(1)}
+                variant="centered"
+                size="sm"
+                style={{ fontSize: '12px' }}
+                sx={styles.tab}
+              />
+            </Tabs>
+          </Wrapper>
+        )}
+        <IfoCardDetails stats={stats} />
+      </SubContainer>
     </Container>
   )
 }

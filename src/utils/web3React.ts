@@ -5,34 +5,45 @@ import { TorusConnector } from '@web3-react/torus-connector'
 import { BscConnector } from '@binance-chain/bsc-connector'
 import { ConnectorNames } from '@ape.swap/uikit'
 import getRpcUrl from 'utils/getRpcUrl'
-import { CHAIN_ID } from 'config/constants/chains'
 import { Web3Provider } from '@ethersproject/providers'
+import { UAuthConnector } from '@uauth/web3-react'
+import UAuth from '@uauth/js'
+import { ChainId } from '@ape.swap/sdk'
 
 const POLLING_INTERVAL = 15000
 
 // When adding a new chain we need to add the CHAIN_ID to the supported chains
 
 const injected = new InjectedConnector({
-  supportedChainIds: [CHAIN_ID.BSC, CHAIN_ID.BSC_TESTNET, CHAIN_ID.MATIC, CHAIN_ID.MATIC_TESTNET, CHAIN_ID.ETH],
+  supportedChainIds: [ChainId.BSC, ChainId.BSC_TESTNET, ChainId.MATIC, ChainId.MATIC_TESTNET, ChainId.MAINNET],
 })
 
 const walletconnect = new WalletConnectConnector({
-  rpc: { [CHAIN_ID.BSC]: getRpcUrl(CHAIN_ID.BSC) },
-  supportedChainIds: [CHAIN_ID.BSC, CHAIN_ID.BSC_TESTNET, CHAIN_ID.MATIC, CHAIN_ID.MATIC_TESTNET, CHAIN_ID.ETH],
+  rpc: { [ChainId.BSC]: getRpcUrl(ChainId.BSC) },
+  supportedChainIds: [ChainId.BSC, ChainId.BSC_TESTNET, ChainId.MATIC, ChainId.MATIC_TESTNET, ChainId.MAINNET],
   bridge: 'https://bridge.walletconnect.org',
   qrcode: true,
   pollingInterval: POLLING_INTERVAL,
 })
 
-const bscConnector = new BscConnector({ supportedChainIds: [CHAIN_ID.BSC] })
-const torus = new TorusConnector({ chainId: CHAIN_ID.BSC, initOptions: { network: { host: 'bsc_mainnet' } } })
+const bscConnector = new BscConnector({ supportedChainIds: [ChainId.BSC] })
+const torus = new TorusConnector({ chainId: ChainId.BSC, initOptions: { network: { host: 'bsc_mainnet' } } })
 
 export const walletlink = new WalletLinkConnector({
-  url: getRpcUrl(CHAIN_ID.BSC),
-  supportedChainIds: [CHAIN_ID.BSC],
+  url: getRpcUrl(ChainId.BSC),
+  supportedChainIds: [ChainId.BSC],
   appName: 'Apeswap',
   darkMode: true,
   appLogoUrl: 'https://apeswap.finance/logo.png',
+})
+
+export const uauth = new UAuthConnector({
+  uauth: new UAuth({
+    clientID: process.env.REACT_APP_UD_CLIENT_ID,
+    redirectUri: process.env.REACT_APP_UD_REDIRECT_URI,
+    scope: 'openid wallet',
+  }),
+  connectors: { injected, walletconnect },
 })
 
 export const connectorsByName: { [connectorName in ConnectorNames]: any } = {
@@ -41,6 +52,7 @@ export const connectorsByName: { [connectorName in ConnectorNames]: any } = {
   [ConnectorNames.BSC]: bscConnector,
   [ConnectorNames.Walletlink]: walletlink,
   [ConnectorNames.Torus]: torus,
+  [ConnectorNames.Unstoppable]: uauth,
 }
 
 export const getLibrary = (provider: any): Web3Provider => {

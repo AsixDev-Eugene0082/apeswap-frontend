@@ -30,6 +30,9 @@ export const styles: Record<string, ThemeUIStyleObject> = {
   learnText: {
     mt: '5%',
     fontSize: 'calc(6px + 1.5vw)',
+    textTransform: 'capitalize',
+    padding: 0,
+    fontWeight: 600,
     '@media screen and (min-width: 1130px)': {
       fontSize: '22.5px',
     },
@@ -66,7 +69,7 @@ export const FlexSkeleton = styled(Skeleton)<{ maxWidth?: number; listViewBreak?
 
 export const LearnMoreArrow = styled(ArrowDropDownIcon)`
   transform: rotate(270deg);
-  margin-left: 5px;
+  margin-left: 10px;
   width: calc(4px + 0.9vw);
   @media screen and (min-width: 1130px) {
     width: 14px;

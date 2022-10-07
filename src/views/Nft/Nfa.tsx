@@ -135,6 +135,7 @@ const Nfa = () => {
                     transactionHash={trx.transactionHash}
                     from={trx.from}
                     to={trx.to}
+                    key={trx.blockNumber}
                   />
                 ))
               ) : (

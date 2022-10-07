@@ -44,6 +44,7 @@ export enum QuoteToken {
   'TWT' = 'TWT',
   'UST' = 'UST',
   'ETH' = 'ETH',
+  'USDT' = 'USDT',
 }
 
 export enum PoolCategory {
@@ -146,6 +147,7 @@ export interface Token {
   dontFetch?: boolean
   lpToken?: boolean
   price?: number
+  active?: boolean
 }
 
 export type Images = {
@@ -306,4 +308,6 @@ export interface BillsConfig {
   lpToken: Token
   earnToken: Token
   inactive?: boolean
+  projectLink?: string
+  twitter?: string
 }

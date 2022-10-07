@@ -1,23 +1,6 @@
-import { Token } from 'config/constants/types'
-
-export interface BuyProps {
-  userLpValue: string
-  token: Token
-  quoteToken: Token
-  billAddress: string
-  disabled?: boolean
-  onValueChange: (val: string) => void
-  onBillId: (billId: string, transactionHash: string) => void
-  onTransactionSubmited: (trxSent: boolean) => void
-  value: string
-  lpPrice: number
-}
-
-export interface ApproveProps {
-  billAddress: string
-  billIndex: number
-  lpToken: Token
-}
+import { Bills } from 'state/types'
+import { Currency } from '@ape.swap/sdk'
+import { MergedZap } from 'state/zap/actions'
 
 export interface ClaimProps {
   billAddress: string
@@ -33,6 +16,25 @@ export interface TransferProps {
   disabled?: boolean
 }
 
-export interface ActionProps extends BuyProps, ApproveProps {
-  allowance: string
+export interface BuyProps {
+  bill: Bills
+  onBillId: (billId: string, transactionHash: string) => void
+  onTransactionSubmited: (trxSent: boolean) => void
+}
+
+export interface BillActionsProps {
+  bill: Bills
+  zap: MergedZap
+  currencyB: Currency
+  handleBuy: () => void
+  billValue: string
+  value: string
+  safeAvailable: string
+  balance: string
+  pendingTrx: boolean
+}
+
+export interface DualCurrencySelector {
+  currencyA: Currency
+  currencyB: Currency
 }

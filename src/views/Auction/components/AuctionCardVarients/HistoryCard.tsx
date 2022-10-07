@@ -3,7 +3,6 @@ import styled from 'styled-components'
 import { getBalanceNumber } from 'utils/formatBalance'
 import { useWeb3React } from '@web3-react/core'
 import { Auction } from 'state/types'
-import { useTokenPriceFromSymbol } from 'state/hooks'
 import { ZERO_ADDRESS } from 'config'
 import { Text } from '@apeswapfinance/uikit'
 import BigNumber from 'bignumber.js'
@@ -99,6 +98,7 @@ const BidAmount = styled(Text)`
   }
 `
 
+/*
 const CurrentBidDollarWrapper = styled(Text)`
   position: absolute;
   font-style: normal;
@@ -111,6 +111,7 @@ const CurrentBidDollarWrapper = styled(Text)`
   letter-spacing: 0.05em;
   color: #38a611;
 `
+*/
 
 const HighestBidder = styled.div`
   position: absolute;
@@ -136,8 +137,6 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ auction }) => {
   const highestBidFlag = highestBidder === account
   const notSold = highestBidder === ZERO_ADDRESS
   const rawBidAmount = getBalanceNumber(new BigNumber(highestBid))
-  const bnbPrice = useTokenPriceFromSymbol('BNB')
-  const dollarValue = (getBalanceNumber(new BigNumber(bnbPrice), 0) * rawBidAmount).toFixed(2)
   const { t } = useTranslation()
   return (
     <Card highestBidFlag={highestBidFlag}>
@@ -147,13 +146,11 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ auction }) => {
           <>
             <BoughtText>{t('Did Not Sell')}</BoughtText>
             <BidAmount>{t('Ask %amount% BNB', { amount: rawBidAmount.toFixed(3) })}</BidAmount>
-            <CurrentBidDollarWrapper>~${dollarValue}</CurrentBidDollarWrapper>
           </>
         ) : (
           <>
             <BoughtText>{t('Bought For')}</BoughtText>
             <BidAmount> {rawBidAmount.toFixed(3)} BNB</BidAmount>
-            <CurrentBidDollarWrapper>~${dollarValue}</CurrentBidDollarWrapper>
           </>
         )}
       </TextHolder>

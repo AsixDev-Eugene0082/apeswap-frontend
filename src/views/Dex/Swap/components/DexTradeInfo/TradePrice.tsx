@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import React from 'react'
-import { Price } from '@apeswapfinance/sdk'
+import { Price } from '@ape.swap/sdk'
 import { Text } from '@ape.swap/uikit'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { dexStyles } from 'views/Dex/styles'

@@ -54,8 +54,8 @@ const StyledButton = styled(Button)`
   background-color: #ffb300;
   box-shadow: none;
   text-transform: uppercase;
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 500;
+  font-size: 12px;
   padding-left: 10px;
   padding-right: 10px;
   border-radius: 10px;

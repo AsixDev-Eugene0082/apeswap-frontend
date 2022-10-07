@@ -1,4 +1,15 @@
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
+import { keyframes } from '@emotion/react'
+
+export const FadeIn = keyframes({
+  '0%': { opacity: 0.5 },
+  '100%': { opacity: 1 },
+})
+
+export const FadeOut = keyframes({
+  '0%': { opacity: 1 },
+  '100%': { opacity: 0 },
+})
 
 export const Banner = styled.div`
   position: absolute;
@@ -11,13 +22,4 @@ export const Banner = styled.div`
   background-image: ${({ theme }) => (theme.isDark ? 'url(images/banner-night.svg)' : 'url(images/banner-day.svg)')};
   background-size: cover;
   background-repeat: no-repeat;
-`
-export const FadeIn = keyframes`
-    0%{opacity: .5};
-    100%{opacity: 1};
-`
-
-export const FadeOut = keyframes`
-    0%{opacity: 1};
-    100%{opacity: 0};
 `

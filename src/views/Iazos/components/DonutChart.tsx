@@ -61,13 +61,14 @@ const DonutChart: React.FC<DonutChartProps> = ({ items, title }) => {
               strokeDasharray={circumference - 0.2}
               strokeDashoffset={calculateOffset(item.value)}
               transform={item.angleRotate}
+              key={item.label}
             />
           ))}
         </ChartSvg>
       </ChartContainer>
       <GraphCardWrapper>
         {offsetChart.map((item) => (
-          <IconAndTextWrapper>
+          <IconAndTextWrapper key={item.label}>
             <GraphCard color={item.color} />
             <StyledText>
               {item.value.toString() === 'NaN' ? (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import { Currency, Pair, Token } from '@apeswapfinance/sdk'
+import { Currency, Pair, Token } from '@ape.swap/sdk'
 import { Button, Text, useModal, Flex, ArrowDropDownIcon, useMatchBreakpoints } from '@apeswapfinance/uikit'
 import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'

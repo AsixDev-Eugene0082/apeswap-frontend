@@ -22,12 +22,13 @@ const DropdownList: React.FC<DropdownListProps> = ({ dropdownList, title, defaul
       </HeaderWrapper>
       {opened && (
         <DropDownWrapper>
-          {dropdownListFiltered.map((item) => (
+          {dropdownListFiltered.map((item, i) => (
             <DropdownItem
               onClick={() => {
                 setSelectedItem(item)
                 onChange(item)
               }}
+              key={i}
             >
               <StyledText>{item}</StyledText>
             </DropdownItem>

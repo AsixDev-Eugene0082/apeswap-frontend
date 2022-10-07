@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import { Flex } from '@apeswapfinance/uikit'
 import { useWeb3React } from '@web3-react/core'
-import { useBlock } from 'state/block/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import { getBalanceNumber } from 'utils/formatBalance'
 import { Pool } from 'state/types'
 import CardHeading from './CardHeading'
@@ -67,7 +67,7 @@ const PoolCard: React.FC<HarvestProps> = ({ pool, removed }) => {
     tokenDecimals,
   } = pool
   const { account } = useWeb3React()
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const [showExpandableSection, setShowExpandableSection] = useState(false)
 
   const allowance = new BigNumber(userData?.allowance || 0)

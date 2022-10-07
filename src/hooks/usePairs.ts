@@ -1,10 +1,12 @@
-import { TokenAmount, Pair, Currency } from '@apeswapfinance/sdk'
+import { TokenAmount, Currency, Pair, SmartRouter } from '@ape.swap/sdk'
 import { useMemo } from 'react'
 import { abi as IUniswapV2PairABI } from '@uniswap/v2-core/build/IUniswapV2Pair.json'
 import { Interface } from '@ethersproject/abi'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
+import { PRIORITY_SMART_ROUTERS } from 'config/constants/chains'
+import { chunk } from 'lodash'
 
-import { useMultipleContractSingleData } from '../state/multicall/hooks'
+import { useMultipleContractSingleData } from 'lib/hooks/multicall'
 import { wrappedCurrency } from '../utils/wrappedCurrency'
 
 const PAIR_INTERFACE = new Interface(IUniswapV2PairABI)
@@ -16,7 +18,10 @@ export enum PairState {
   INVALID,
 }
 
-export function usePairs(currencies: [Currency | undefined, Currency | undefined][]): [PairState, Pair | null][] {
+export function usePairs(
+  currencies: [Currency | undefined, Currency | undefined][],
+  smartRouter?: SmartRouter,
+): [PairState, Pair | null][] {
   const { chainId } = useActiveWeb3React()
 
   const tokens = useMemo(
@@ -31,9 +36,11 @@ export function usePairs(currencies: [Currency | undefined, Currency | undefined
   const pairAddresses = useMemo(
     () =>
       tokens.map(([tokenA, tokenB]) => {
-        return tokenA && tokenB && !tokenA.equals(tokenB) ? Pair.getAddress(tokenA, tokenB) : undefined
+        return tokenA && tokenB && !tokenA.equals(tokenB)
+          ? Pair.getAddress(tokenA, tokenB, smartRouter || SmartRouter.APE)
+          : undefined
       }),
-    [tokens],
+    [tokens, smartRouter],
   )
 
   const results = useMultipleContractSingleData(pairAddresses, PAIR_INTERFACE, 'getReserves')
@@ -51,12 +58,67 @@ export function usePairs(currencies: [Currency | undefined, Currency | undefined
       const [token0, token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
       return [
         PairState.EXISTS,
-        new Pair(new TokenAmount(token0, reserve0.toString()), new TokenAmount(token1, reserve1.toString())),
+        new Pair(
+          new TokenAmount(token0, reserve0.toString()),
+          new TokenAmount(token1, reserve1.toString()),
+          smartRouter || SmartRouter.APE,
+        ),
       ]
     })
-  }, [results, tokens])
+  }, [results, tokens, smartRouter])
 }
 
-export function usePair(tokenA?: Currency, tokenB?: Currency): [PairState, Pair | null] {
-  return usePairs([[tokenA, tokenB]])[0]
+export function useAllSmartPairs(currencies: [Currency | undefined, Currency | undefined][]) {
+  const { chainId } = useActiveWeb3React()
+
+  const tokens = useMemo(
+    () =>
+      currencies.map(([currencyA, currencyB]) => [
+        wrappedCurrency(currencyA, chainId),
+        wrappedCurrency(currencyB, chainId),
+      ]),
+    [chainId, currencies],
+  )
+
+  const pairAddresses = useMemo(
+    () =>
+      PRIORITY_SMART_ROUTERS[chainId].flatMap((smartRouter: SmartRouter) => {
+        return tokens.map(([tokenA, tokenB]) => {
+          return tokenA && tokenB && !tokenA.equals(tokenB) ? Pair.getAddress(tokenA, tokenB, smartRouter) : undefined
+        })
+      }),
+    [tokens, chainId],
+  )
+
+  const results = useMultipleContractSingleData(pairAddresses, PAIR_INTERFACE, 'getReserves')
+  const chunkedResults = chunk(results, tokens.length)
+
+  const pairResults = useMemo(() => {
+    return chunkedResults.map((chunkedResult, i) => {
+      return chunkedResult.map((result, j) => {
+        const { result: reserves, loading } = result
+        const tokenA = tokens[j][0]
+        const tokenB = tokens[j][1]
+        if (loading) return [PairState.LOADING, null]
+        if (!tokenA || !tokenB || tokenA.equals(tokenB)) return [PairState.INVALID, null]
+        if (!reserves) return [PairState.NOT_EXISTS, null]
+        const { reserve0, reserve1 } = reserves
+        const [token0, token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+        return [
+          PairState.EXISTS,
+          new Pair(
+            new TokenAmount(token0, reserve0.toString()),
+            new TokenAmount(token1, reserve1.toString()),
+            PRIORITY_SMART_ROUTERS[chainId][i],
+          ),
+        ]
+      })
+    })
+  }, [tokens, chunkedResults, chainId])
+
+  return pairResults
+}
+
+export function usePair(tokenA?: Currency, tokenB?: Currency, smartRouter?: SmartRouter): [PairState, Pair | null] {
+  return usePairs([[tokenA, tokenB]], smartRouter || SmartRouter.APE)[0]
 }

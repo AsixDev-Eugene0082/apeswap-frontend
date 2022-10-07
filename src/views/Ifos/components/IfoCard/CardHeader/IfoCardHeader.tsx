@@ -55,7 +55,7 @@ const IfoCardHeader: React.FC<IfoCardHeaderProps> = ({
 
   return (
     <StyledIfoCardHeader mb="24px" alignItems="top">
-      <img src={`/images/ifos/${ifoId}.svg`} alt={ifoId} width="64px" height="64px" />
+      <img src={`/images/ifos/${ifoId}.svg`} alt={ifoId} style={{ width: '64px', height: '64px' }} />
       <Stack>
         {isLP && <Title as="h2">{t('LP OFFERING')}</Title>}
         {!isLP && <Title as="h2">{`${gnana ? 'GNANA' : 'BNB'} ${t('OFFERING')}`}</Title>}

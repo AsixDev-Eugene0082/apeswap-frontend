@@ -172,7 +172,7 @@ const TextInput: React.FC<TextInputProps> = ({
     if (url) {
       if (!isUrl) {
         setBackgroundColorForInput('rgb(255,0,0, .3)')
-        toastError(t('Please enter a valid url'))
+        toastError(t('Error: Please enter a valid URL.'))
       } else {
         setBackgroundColorForInput(backgroundColor)
       }

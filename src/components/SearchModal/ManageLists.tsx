@@ -1,14 +1,16 @@
+/** @jsxImportSource theme-ui */
 import React, { memo, useCallback, useMemo, useState, useEffect } from 'react'
-import { Button, Text, CheckmarkIcon, CogIcon, Input, Toggle, Card } from '@apeswapfinance/uikit'
-import { useDispatch, useSelector } from 'react-redux'
+import { Button, Text, CheckmarkIcon, CogIcon, Card, Flex, Input } from '@ape.swap/uikit'
+import { useSelector } from 'react-redux'
 import styled from '@emotion/styled'
+import { Switch } from 'theme-ui'
 import { TokenList } from '@uniswap/token-lists'
-import { UNSUPPORTED_LIST_URLS } from 'config/constants/lists'
-import { parseENSAddress } from 'utils/ENS/parseENSAddress'
+import { EXTENDED_LIST_DETAILS, UNSUPPORTED_LIST_URLS } from 'config/constants/lists'
 import { useTranslation } from 'contexts/Localization'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 
 import useFetchListCallback from '../../hooks/useFetchListCallback'
-import { AppDispatch, AppState } from '../../state'
+import { AppState, useAppDispatch } from '../../state'
 import { disableList, enableList } from '../../state/lists/actions'
 import { useIsListActive, useAllLists, useActiveListUrls } from '../../state/lists/hooks'
 
@@ -34,20 +36,52 @@ const RowWrapper = styled(Row)<{ active: boolean }>`
 `
 
 const StyledInput = styled(Input)`
-  width: 300px;
+  width: 420px;
+  max-width: 100% !important;
+  border: none;
 `
 
 function listUrlRowHTMLId(listUrl: string) {
   return `list-row-${listUrl.replace(/\./g, '-')}`
 }
 
-const ListRow = memo(function ListRow({ listUrl }: { listUrl: string }) {
+const ListRow = memo(function ListRow({
+  listUrl,
+  setListUrl,
+  setModalView,
+  setImportList,
+}: {
+  listUrl: string
+  setListUrl: (url: string) => void
+  setModalView: (view: CurrencyModalView) => void
+  setImportList: (list: TokenList) => void
+}) {
+  const { chainId } = useActiveWeb3React()
   const listsByUrl = useSelector<AppState, AppState['lists']['byUrl']>((state) => state.lists.byUrl)
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useAppDispatch()
   const { current: list } = listsByUrl[listUrl]
+  // Extended doesn't need to be defined for each list
+  const extendedLogo = EXTENDED_LIST_DETAILS[list?.name]?.logo
+  const extendedName = EXTENDED_LIST_DETAILS[list?.name]?.name
+  const extendedWarning = EXTENDED_LIST_DETAILS[list?.name]?.warning
+  const extendedChainId = EXTENDED_LIST_DETAILS[list?.name]?.chainId
 
   const isActive = useIsListActive(listUrl)
+
   const { t } = useTranslation()
+
+  // TODO: allow users to update list versions and remove unwanted list
+  // const handleAcceptListUpdate = useCallback(() => {
+  //   if (!pending) return
+  //   dispatch(acceptListUpdate(listUrl))
+  // }, [dispatch, listUrl, pending])
+
+  // const handleRemoveList = useCallback(() => {
+  //   // eslint-disable-next-line no-alert
+  //   if (window.confirm('Please confirm you would like to remove this list')) {
+  //     dispatch(removeList(listUrl))
+  //   }
+  // }, [dispatch, listUrl])
 
   const handleEnableList = useCallback(() => {
     dispatch(enableList(listUrl))
@@ -57,18 +91,23 @@ const ListRow = memo(function ListRow({ listUrl }: { listUrl: string }) {
     dispatch(disableList(listUrl))
   }, [dispatch, listUrl])
 
-  if (!list) return null
-
-  return (
+  return extendedChainId && extendedChainId !== chainId ? (
+    <></>
+  ) : (
     <RowWrapper active={isActive} key={listUrl} id={listUrlRowHTMLId(listUrl)}>
-      {list.logoURI ? (
-        <ListLogo size="40px" style={{ marginRight: '1rem' }} logoURI={list.logoURI} alt={`${list.name} list logo`} />
+      {extendedLogo || list.logoURI ? (
+        <ListLogo
+          size="40px"
+          style={{ marginRight: '1rem', borderRadius: '20px' }}
+          logoURI={extendedLogo || list.logoURI}
+          alt={`${extendedName || list.name} list logo`}
+        />
       ) : (
         <div style={{ width: '24px', height: '24px', marginRight: '1rem' }} />
       )}
       <Column style={{ flex: '1' }}>
         <Row>
-          <Text bold>{list.name}</Text>
+          <Text bold>{extendedName || list.name}</Text>
         </Row>
         <RowFixed>
           <Text fontSize="12px" mr="6px" textTransform="lowercase">
@@ -79,25 +118,45 @@ const ListRow = memo(function ListRow({ listUrl }: { listUrl: string }) {
           </span>
         </RowFixed>
       </Column>
-      <Toggle
-        labels={[t('NO'), t('YES')]}
-        checked={isActive}
-        onChange={() => {
-          if (isActive) {
-            handleDisableList()
-          } else {
-            handleEnableList()
-          }
-        }}
-      />
+      <Flex sx={{ alignItems: 'flex-end' }}>
+        <Switch
+          sx={{
+            borderRadius: '8px',
+            backgroundColor: 'white3',
+            'input:checked ~ &': {
+              backgroundColor: 'yellow',
+            },
+          }}
+          checked={isActive}
+          onChange={() => {
+            if (isActive) {
+              handleDisableList()
+            } else {
+              if (!extendedWarning) {
+                handleEnableList()
+              }
+              if (extendedWarning) {
+                setImportList(list)
+                setModalView(CurrencyModalView.importList)
+                setListUrl(listUrl)
+              }
+            }
+          }}
+        />
+      </Flex>
     </RowWrapper>
   )
 })
 
 const ListContainer = styled.div`
   padding: 1rem 0;
-  height: 100%;
-  overflow: auto;
+  height: 350px;
+  overflow: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  ::-webkit-scrollbar {
+    display: none;
+  }
 `
 
 function ManageLists({
@@ -111,13 +170,13 @@ function ManageLists({
 }) {
   const [listUrlInput, setListUrlInput] = useState<string>('')
 
+  const { t } = useTranslation()
+
   const lists = useAllLists()
 
   // sort by active but only if not visible
   const activeListUrls = useActiveListUrls()
   const [activeCopy, setActiveCopy] = useState<string[] | undefined>()
-
-  const { t } = useTranslation()
   useEffect(() => {
     if (!activeCopy && activeListUrls) {
       setActiveCopy(activeListUrls)
@@ -131,7 +190,7 @@ function ManageLists({
   const fetchList = useFetchListCallback()
 
   const validUrl: boolean = useMemo(() => {
-    return uriToHttp(listUrlInput).length > 0 || Boolean(parseENSAddress(listUrlInput))
+    return uriToHttp(listUrlInput).length > 0
   }, [listUrlInput])
 
   const sortedLists = useMemo(() => {
@@ -154,6 +213,12 @@ function ManageLists({
         }
 
         if (l1 && l2) {
+          // Always make apeswap list in top.
+          const keyword = 'apeswap'
+          if (l1.name.toLowerCase().includes(keyword) || l2.name.toLowerCase().includes(keyword)) {
+            return -1
+          }
+
           return l1.name.toLowerCase() < l2.name.toLowerCase()
             ? -1
             : l1.name.toLowerCase() === l2.name.toLowerCase()
@@ -174,7 +239,7 @@ function ManageLists({
     async function fetchTempList() {
       fetchList(listUrlInput, false)
         .then((list) => setTempList(list))
-        .catch(() => setAddError(t('Error importing list')))
+        .catch(() => setAddError('Error importing list'))
     }
     // if valid url, fetch details for card
     if (validUrl) {
@@ -182,7 +247,7 @@ function ManageLists({
     } else {
       setTempList(undefined)
       if (listUrlInput !== '') {
-        setAddError(t('Enter valid list location'))
+        setAddError('Enter valid list location')
       }
     }
 
@@ -190,7 +255,7 @@ function ManageLists({
     if (listUrlInput === '') {
       setAddError(undefined)
     }
-  }, [fetchList, listUrlInput, validUrl, t])
+  }, [fetchList, listUrlInput, validUrl])
 
   // check if list is already imported
   const isImported = Object.keys(lists).includes(listUrlInput)
@@ -205,22 +270,20 @@ function ManageLists({
 
   return (
     <Wrapper>
-      <AutoColumn gap="14px">
-        <Row>
-          <StyledInput
-            id="list-add-input"
-            placeholder={t('https:// or ipfs:// or ENS name')}
-            value={listUrlInput}
-            onChange={handleInput}
-            icon="search"
-          />
-        </Row>
+      <Flex sx={{ position: 'relative', width: '100%', marginBottom: '20px' }}>
+        <StyledInput
+          id="list-add-input"
+          placeholder={t('https:// or ipfs:// or ENS name')}
+          value={listUrlInput}
+          onChange={handleInput}
+          icon="search"
+        />
         {addError ? (
           <Text color="error" style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>
             {addError}
           </Text>
         ) : null}
-      </AutoColumn>
+      </Flex>
       {tempList && (
         <AutoColumn style={{ paddingTop: 0 }}>
           <Card padding="12px 20px">
@@ -240,7 +303,9 @@ function ManageLists({
                   <Text>{t('Loaded')}</Text>
                 </RowFixed>
               ) : (
-                <Button onClick={handleImport}>{t('Import')}</Button>
+                <Button onClick={handleImport} size="sm">
+                  {t('Import')}
+                </Button>
               )}
             </RowBetween>
           </Card>
@@ -249,7 +314,13 @@ function ManageLists({
       <ListContainer>
         <AutoColumn gap="md">
           {sortedLists.map((listUrl) => (
-            <ListRow key={listUrl} listUrl={listUrl} />
+            <ListRow
+              key={listUrl}
+              listUrl={listUrl}
+              setListUrl={setListUrl}
+              setModalView={setModalView}
+              setImportList={setImportList}
+            />
           ))}
         </AutoColumn>
       </ListContainer>

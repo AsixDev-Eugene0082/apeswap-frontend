@@ -9,7 +9,6 @@ import {
 } from 'state/actions'
 import { stake, sousStake, nfaStake, miniChefStake, jungleStake } from 'utils/callHelpers'
 import track from 'utils/track'
-import { CHAIN_ID } from 'config/constants'
 import {
   updateDualFarmUserEarnings,
   updateDualFarmUserStakedBalances,
@@ -61,7 +60,7 @@ export const useSousStake = (sousId) => {
 
       track({
         event: 'pool',
-        chain: CHAIN_ID,
+        chain: 56,
         data: {
           cat: 'stake',
           amount,
@@ -88,7 +87,7 @@ export const useJungleStake = (jungleId) => {
 
       track({
         event: 'jungle_farm',
-        chain: CHAIN_ID,
+        chain: 56,
         data: {
           cat: 'stake',
           amount,

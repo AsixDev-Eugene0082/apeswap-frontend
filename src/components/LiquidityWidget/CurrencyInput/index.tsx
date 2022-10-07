@@ -1,5 +1,5 @@
 import React from 'react'
-import { Currency, Pair } from '@apeswapfinance/sdk'
+import { Currency, Pair } from '@ape.swap/sdk'
 import { Button, Text, useModal, Flex, ArrowDropDownIcon } from '@apeswapfinance/uikit'
 import styled from 'styled-components'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'

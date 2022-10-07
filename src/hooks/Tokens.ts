@@ -1,9 +1,10 @@
 /* eslint-disable no-param-reassign */
 import { parseBytes32String } from '@ethersproject/strings'
-import { Currency, ETHER, Token, currencyEquals } from '@apeswapfinance/sdk'
+import { Currency, ETHER, Token, currencyEquals } from '@ape.swap/sdk'
 import { useMemo } from 'react'
 import { arrayify } from 'ethers/lib/utils'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
+import { NEVER_RELOAD, useSingleCallResult } from 'lib/hooks/multicall'
 import {
   TokenAddressMap,
   useDefaultTokenList,
@@ -12,7 +13,6 @@ import {
   useCombinedInactiveList,
 } from '../state/lists/hooks'
 
-import { NEVER_RELOAD, useSingleCallResult } from '../state/multicall/hooks'
 import useUserAddedTokens from '../state/user/hooks/useUserAddedTokens'
 import { isAddress } from '../utils'
 
@@ -28,10 +28,13 @@ function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean):
     if (!chainId) return {}
 
     // reduce to just tokens
-    const mapWithoutUrls = Object.keys(tokenMap[chainId]).reduce<{ [address: string]: Token }>((newMap, address) => {
-      newMap[address] = tokenMap[chainId][address].token
-      return newMap
-    }, {})
+    const mapWithoutUrls = Object.keys(tokenMap[chainId] ?? {}).reduce<{ [address: string]: Token }>(
+      (newMap, address) => {
+        newMap[address] = tokenMap[chainId][address].token
+        return newMap
+      },
+      {},
+    )
 
     if (includeUserAdded) {
       return (

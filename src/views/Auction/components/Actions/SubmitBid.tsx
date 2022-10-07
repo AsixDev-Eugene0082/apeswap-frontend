@@ -56,7 +56,7 @@ const SubmitBid: React.FC<BidProps> = ({ disabled, currentBid, nfaId, countdown,
       onClick={async () => {
         setPendingTx(true)
         await onBid(currentBid, nfaId, auctionId).catch(() => {
-          toastError(t('Bidding Error, It is likely you were outbid'))
+          toastError(t('Bidding Error: It is likely you were outbid. Please try again.'))
         })
         setPendingTx(false)
       }}
@@ -69,7 +69,7 @@ const SubmitBid: React.FC<BidProps> = ({ disabled, currentBid, nfaId, countdown,
       onClick={async () => {
         setPendingTx(true)
         await onNextAuction(nfaId).catch(() => {
-          toastError(t('Transaction Error, Something went wrong submitting transaction'))
+          toastError(t('Transaction Error: Please attempt your transaction again.'))
         })
         setPendingTx(false)
       }}

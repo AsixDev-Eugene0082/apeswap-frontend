@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { AutoRenewIcon } from '@apeswapfinance/uikit'
 import { useHistory } from 'react-router-dom'
 import useCreateIazo from 'views/Iazos/hooks/useCreateIazo'
-import tokens from 'config/constants/tokens'
 import BigNumber from 'bignumber.js'
 import { useWeb3React } from '@web3-react/core'
 import useCreateIazoApi from 'views/Iazos/hooks/useCreateIazoApi'
@@ -11,6 +10,7 @@ import { useToast } from 'state/hooks'
 import { useTranslation } from 'contexts/Localization'
 import { PresaleData } from '../types'
 import StyledButton from './styles'
+import { useTokenPrices } from 'state/tokenPrices/hooks'
 
 interface CreatePresaleProps {
   presaleData: PresaleData
@@ -23,13 +23,14 @@ const CreatePresale: React.FC<CreatePresaleProps> = ({ presaleData, disabled, cr
   const { chainId, account } = useWeb3React()
   const history = useHistory()
   const { toastSuccess, toastError } = useToast()
+  const tokens = useTokenPrices().tokenPrices
   const { datesSelected, pairCreation, postsaleDetails, presaleTokenDetails, information } = presaleData
   const { tokenAddress, quoteToken, tokenDecimals, tokenSymbol } = pairCreation
   const { burnRemains, pricePerToken, softcap, limitPerUser, tokensForSale } = presaleTokenDetails
   const { website, whitepaper, twitter, telegram, medium, description, tokenLogo } = information
   const { start, end } = datesSelected
   const { lockLiquidity, liquidityPercent, listingPrice } = postsaleDetails
-  const quoteTokenObject: Token = tokens[quoteToken.toLowerCase()]
+  const quoteTokenObject: Token = tokens.find((token) => token.symbol.toLowerCase() === quoteToken.toLowerCase())
 
   // Format token price
   // TOKEN_PRICE = BASE_TOKEN_AMOUNT * 10**(18 - iazoTokenDecimals)
@@ -134,7 +135,7 @@ const CreatePresale: React.FC<CreatePresaleProps> = ({ presaleData, disabled, cr
                   history.push('/ss-iao')
                   toastSuccess(t('Your SS-IAO was successfully created!'))
                 } else {
-                  toastError(t('Your SS-IAO encountered an error. Please contact the ApeSwap team for help.'))
+                  toastError(t('SS-IAO Error: Please contact the ApeSwap team for assistance.'))
                 }
               })
             })

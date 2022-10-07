@@ -1,10 +1,14 @@
-import jungleFarmsConfig from 'config/constants/jungleFarms'
 import jungleChefABI from 'config/abi/jungleChef.json'
 import erc20ABI from 'config/abi/erc20.json'
 import multicall from 'utils/multicall'
 import BigNumber from 'bignumber.js'
+import { JungleFarmConfig } from 'config/constants/types'
 
-export const fetchJungleFarmsAllowance = async (chainId: number, account) => {
+export const fetchJungleFarmsAllowance = async (
+  chainId: number,
+  account: string,
+  jungleFarmsConfig: JungleFarmConfig[],
+) => {
   const calls = jungleFarmsConfig
     .filter((f) => f.network === chainId)
     .map((f) => ({
@@ -20,7 +24,7 @@ export const fetchJungleFarmsAllowance = async (chainId: number, account) => {
   )
 }
 
-export const fetchUserBalances = async (chainId: number, account) => {
+export const fetchUserBalances = async (chainId: number, account: string, jungleFarmsConfig: JungleFarmConfig[]) => {
   const calls = jungleFarmsConfig
     .filter((f) => f.network === chainId)
     .map((p) => ({
@@ -37,7 +41,11 @@ export const fetchUserBalances = async (chainId: number, account) => {
   return { ...tokenBalances }
 }
 
-export const fetchUserStakeBalances = async (chainId: number, account) => {
+export const fetchUserStakeBalances = async (
+  chainId: number,
+  account: string,
+  jungleFarmsConfig: JungleFarmConfig[],
+) => {
   const calls = jungleFarmsConfig.map((p) => ({
     address: p.contractAddress[chainId],
     name: 'userInfo',
@@ -55,7 +63,11 @@ export const fetchUserStakeBalances = async (chainId: number, account) => {
   return { ...stakedBalances }
 }
 
-export const fetchUserPendingRewards = async (chainId: number, account) => {
+export const fetchUserPendingRewards = async (
+  chainId: number,
+  account: string,
+  jungleFarmsConfig: JungleFarmConfig[],
+) => {
   const calls = jungleFarmsConfig.map((p) => ({
     address: p.contractAddress[chainId],
     name: 'pendingReward',

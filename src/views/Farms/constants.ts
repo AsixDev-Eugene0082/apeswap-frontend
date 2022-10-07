@@ -27,7 +27,7 @@ export const OPTIONS = [
   },
 ]
 
-export const STABLES = ['DAI', 'USDT', 'BUSD', 'USDC', 'MOR', 'FRAX']
+export const STABLES = ['DAI', 'USDT', 'BUSD', 'USDC', 'MOR', 'FRAX', 'TOR']
 
 export const BLUE_CHIPS = [
   'AAVE',

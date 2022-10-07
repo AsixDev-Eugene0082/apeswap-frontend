@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import React, { useCallback, useEffect, useState } from 'react'
-import { Currency, ETHER, JSBI, TokenAmount } from '@apeswapfinance/sdk'
+import { Currency, ETHER, JSBI, TokenAmount } from '@ape.swap/sdk'
 import { Text, useModal, Flex, Svg } from '@ape.swap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { AutoColumn, ColumnCenter } from '../../../components/layout/Column'
@@ -20,6 +20,7 @@ import { styles } from './styles'
 import DexNav from '../components/DexNav'
 import MyPositions from '../components/MyPositions'
 import RecentTransactions from '../components/RecentTransactions'
+import { Box } from 'theme-ui'
 
 enum Fields {
   TOKEN0 = 0,
@@ -91,67 +92,69 @@ export default function PoolFinder() {
             <Text weight={700}>{t('FIND YOUR LIQUIDITY')}</Text>
           </Flex>
           <MyPositions />
-          <Flex sx={{ ...styles.tokenContainer }}>
-            <Text sx={{ ...styles.swapDirectionText }}>{t('Token 1')}</Text>
-            <Flex
-              sx={{ ...styles.primaryFlex }}
-              onClick={() => {
-                onPresentCurrencyModal()
-                setActiveField(Fields.TOKEN0)
-              }}
-            >
-              <>
-                {currency0 ? (
-                  <Row>
-                    <CurrencyLogo currency={currency0} size="30px" />
-                    <Text sx={{ ...styles.tokenText }}>{currency0.getSymbol(chainId)}</Text>
-                  </Row>
-                ) : (
-                  <Text sx={{ ...styles.tokenText }}>{t('Select a Token')}</Text>
-                )}
-                <Svg icon="caret" />
-              </>
+          <Box sx={{ marginTop: '20px' }}>
+            <Flex sx={{ ...styles.tokenContainer }}>
+              <Text sx={{ ...styles.swapDirectionText }}>{t('Token 1')}</Text>
+              <Flex
+                sx={{ ...styles.primaryFlex }}
+                onClick={() => {
+                  onPresentCurrencyModal()
+                  setActiveField(Fields.TOKEN0)
+                }}
+              >
+                <>
+                  {currency0 ? (
+                    <Row>
+                      <CurrencyLogo currency={currency0} size="30px" />
+                      <Text sx={{ ...styles.tokenText }}>{currency0.getSymbol(chainId)}</Text>
+                    </Row>
+                  ) : (
+                    <Text sx={{ ...styles.tokenText }}>{t('Select a Token')}</Text>
+                  )}
+                  <Svg icon="caret" />
+                </>
+              </Flex>
             </Flex>
-          </Flex>
-          <Flex sx={{ margin: '10px 0px', justifyContent: 'center' }}>
-            <Flex
-              sx={{
-                ...styles.addContainer,
-              }}
-            >
-              <Text weight={700} sx={{ lineHeight: '0px' }}>
-                +
-              </Text>
+            <Flex sx={{ margin: '10px 0px', justifyContent: 'center' }}>
+              <Flex
+                sx={{
+                  ...styles.addContainer,
+                }}
+              >
+                <Text weight={700} sx={{ lineHeight: '0px' }}>
+                  +
+                </Text>
+              </Flex>
             </Flex>
-          </Flex>
-          <Flex sx={{ ...styles.tokenContainer }}>
-            <Text sx={{ ...styles.swapDirectionText }}>{t('Token 2')}</Text>
-            <Flex
-              sx={{ ...styles.primaryFlex }}
-              onClick={() => {
-                onPresentCurrencyModal()
-                setActiveField(Fields.TOKEN1)
-              }}
-            >
-              <>
-                {currency1 ? (
-                  <Row>
-                    <CurrencyLogo currency={currency1} size="30px" />
-                    <Text sx={{ ...styles.tokenText }}>{currency1.getSymbol(chainId)}</Text>
-                  </Row>
-                ) : (
-                  <Text sx={{ ...styles.tokenText }}>{t('Select a Token')}</Text>
-                )}
-                <Svg icon="caret" />
-              </>
+            <Flex sx={{ ...styles.tokenContainer }}>
+              <Text sx={{ ...styles.swapDirectionText }}>{t('Token 2')}</Text>
+              <Flex
+                sx={{ ...styles.primaryFlex }}
+                onClick={() => {
+                  onPresentCurrencyModal()
+                  setActiveField(Fields.TOKEN1)
+                }}
+              >
+                <>
+                  {currency1 ? (
+                    <Row>
+                      <CurrencyLogo currency={currency1} size="30px" />
+                      <Text sx={{ ...styles.tokenText }}>{currency1.getSymbol(chainId)}</Text>
+                    </Row>
+                  ) : (
+                    <Text sx={{ ...styles.tokenText }}>{t('Select a Token')}</Text>
+                  )}
+                  <Svg icon="caret" />
+                </>
+              </Flex>
             </Flex>
-          </Flex>
+          </Box>
           {hasPosition && (
             <ColumnCenter
               style={{ justifyItems: 'center', backgroundColor: '', margin: '20px 0px', borderRadius: '12px' }}
             >
               <Text textAlign="center">{t('Pool Found!')}</Text>
-              <StyledInternalLink to="/pool">
+              <StyledInternalLink to="/liquidity">
                 <Text textAlign="center" style={{ textDecoration: 'underline' }}>
                   {t('Manage this pool.')}
                 </Text>

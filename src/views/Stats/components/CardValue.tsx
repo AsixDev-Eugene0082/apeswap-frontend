@@ -10,6 +10,9 @@ interface CardValueProps {
   suffix?: string
   fontFamily?: string
   fontWeight?: number
+  color?: string
+  width?: string
+  maxWidth?: string
 }
 
 const CardValue: React.FC<CardValueProps> = ({
@@ -20,6 +23,9 @@ const CardValue: React.FC<CardValueProps> = ({
   suffix,
   fontFamily,
   fontWeight,
+  color,
+  width,
+  maxWidth,
 }) => {
   const { countUp, update } = useCountUp({
     start: 0,
@@ -28,7 +34,7 @@ const CardValue: React.FC<CardValueProps> = ({
     separator: ',',
     decimals:
       // eslint-disable-next-line no-nested-ternary
-      decimals !== undefined ? decimals : value < 0 ? 4 : value > 1e5 ? 0 : 3,
+      decimals !== undefined ? decimals : value === 0 ? 0 : value < 1 ? 4 : value > 1e5 ? 0 : 2,
   })
 
   const updateValue = useRef(update)
@@ -38,8 +44,15 @@ const CardValue: React.FC<CardValueProps> = ({
   }, [value, updateValue])
 
   return (
-    <Text fontFamily={fontFamily} fontSize={fontSize} fontWeight={fontWeight}>
-      {prefix} {countUp} {suffix}
+    <Text
+      fontFamily={fontFamily}
+      fontSize={fontSize}
+      fontWeight={fontWeight}
+      color={color}
+      style={{ width: `${width}`, maxWidth: `${maxWidth}` }}
+    >
+      {prefix}
+      {countUp} {suffix}
     </Text>
   )
 }

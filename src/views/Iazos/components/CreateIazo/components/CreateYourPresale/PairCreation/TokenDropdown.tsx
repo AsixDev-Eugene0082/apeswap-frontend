@@ -2,12 +2,12 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import { Text, Image, ArrowDropDownIcon, ArrowDropUpIcon } from '@apeswapfinance/uikit'
 
-interface TokenDropdown {
+interface TokenDropdownInterface {
   tokens: string[]
   onChange: (token: string) => void
 }
 
-const TokenDropdown: React.FC<TokenDropdown> = ({ tokens, onChange }) => {
+const TokenDropdown: React.FC<TokenDropdownInterface> = ({ tokens, onChange }) => {
   const [opened, setOpened] = useState(false)
   const [selectedToken, setSelectedToken] = useState(tokens[0])
   const dropdownTokens = tokens.filter((token) => token !== selectedToken)
@@ -26,6 +26,7 @@ const TokenDropdown: React.FC<TokenDropdown> = ({ tokens, onChange }) => {
               onChange(token)
             }}
             last={i === tokens.length - 2}
+            key={i}
           >
             <IconImage height={25} width={25} src={`/images/tokens/${token}.svg`} alt="token" />
             <StyledText>{token}</StyledText>

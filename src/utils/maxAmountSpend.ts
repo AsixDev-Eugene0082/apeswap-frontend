@@ -1,4 +1,4 @@
-import { CurrencyAmount, ETHER, JSBI } from '@apeswapfinance/sdk'
+import { CurrencyAmount, ETHER, JSBI } from '@ape.swap/sdk'
 import { MIN_BNB } from '../config/constants'
 
 /**

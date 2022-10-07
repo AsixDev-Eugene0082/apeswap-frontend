@@ -1,4 +1,3 @@
-import nfaStakingPoolsConfig from 'config/constants/nfaStakingPools'
 import nonFungibleApesAbi from 'config/abi/nonFungibleApes.json'
 import { getPoolApr } from 'utils/apr'
 import { getNonFungibleApesAddress } from 'utils/addressHelper'
@@ -6,10 +5,11 @@ import { getBalanceNumber } from 'utils/formatBalance'
 import multicall from 'utils/multicall'
 import BigNumber from 'bignumber.js'
 import { TokenPrices } from 'state/types'
+import { NfaStakingPoolConfig } from 'config/constants/types'
 
 const CHAIN_ID = process.env.REACT_APP_CHAIN_ID
 
-export const fetchPoolsBlockLimits = async () => {
+export const fetchPoolsBlockLimits = async (nfaStakingPoolsConfig: NfaStakingPoolConfig[]) => {
   return nfaStakingPoolsConfig.map((nfaStakingPool) => {
     return {
       sousId: nfaStakingPool.sousId,
@@ -18,7 +18,7 @@ export const fetchPoolsBlockLimits = async () => {
   })
 }
 
-export const fetchPoolsTotalStatking = async (chainId) => {
+export const fetchPoolsTotalStatking = async (chainId, nfaStakingPoolsConfig: NfaStakingPoolConfig[]) => {
   const nfaAddress = getNonFungibleApesAddress(chainId)
   const calls = nfaStakingPoolsConfig.map((poolConfig) => {
     return {
@@ -38,7 +38,11 @@ export const fetchPoolsTotalStatking = async (chainId) => {
   ]
 }
 
-export const fetchPoolTokenStatsAndApr = async (tokenPrices: TokenPrices[], totalStakingList) => {
+export const fetchPoolTokenStatsAndApr = async (
+  tokenPrices: TokenPrices[],
+  totalStakingList,
+  nfaStakingPoolsConfig: NfaStakingPoolConfig[],
+) => {
   const mappedValues = nfaStakingPoolsConfig.map((pool) => {
     // Get values needed to calculate apr
     const curPool = pool

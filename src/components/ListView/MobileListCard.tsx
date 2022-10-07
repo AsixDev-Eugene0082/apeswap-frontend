@@ -1,6 +1,5 @@
 /** @jsxImportSource theme-ui */
-import { InfoIcon, TooltipBubble } from '@apeswapfinance/uikit'
-import { Flex } from '@ape.swap/uikit'
+import { Flex, TooltipBubble, InfoIcon } from '@ape.swap/uikit'
 import React, { useState } from 'react'
 import { ContentContainer, DropDownIcon, ListCardContainer, ListExpandedContainer, styles } from './styles'
 import { ListCardProps } from './types'
@@ -15,6 +14,9 @@ const MobileListCard: React.FC<ListCardProps> = ({
   infoContentPosition,
   open,
   expandedContentSize,
+  toolTipIconWidth,
+  toolTipStyle,
+  ttWidth,
 }) => {
   const [expanded, setExpanded] = useState(open)
   return (
@@ -31,9 +33,13 @@ const MobileListCard: React.FC<ListCardProps> = ({
           <Flex>
             {expandedContent && <DropDownIcon open={expanded} mr="20px" />}
             {infoContent && (
-              <div style={{ display: 'inline-block' }}>
-                <TooltipBubble body={infoContent} transformTip={infoContentPosition || 'translate(-82%, 50%)'}>
-                  <InfoIcon width="25px" />
+              <div style={{ display: 'inline-block', ...toolTipStyle }}>
+                <TooltipBubble
+                  body={infoContent}
+                  transformTip={infoContentPosition || 'translate(0%, 0%)'}
+                  width={ttWidth || '200px'}
+                >
+                  <InfoIcon width={toolTipIconWidth || '25px'} />
                 </TooltipBubble>
               </div>
             )}

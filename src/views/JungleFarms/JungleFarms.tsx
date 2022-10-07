@@ -8,18 +8,28 @@ import partition from 'lodash/partition'
 import { useTranslation } from 'contexts/Localization'
 import { useBlock } from 'state/block/hooks'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { usePollJungleFarms, useJungleFarms } from 'state/jungleFarms/hooks'
+import {
+  usePollJungleFarms,
+  useJungleFarms,
+  useSetJungleFarms,
+  useJungleFarmTags,
+  useJungleFarmOrderings,
+} from 'state/jungleFarms/hooks'
 import ListViewLayout from 'components/layout/ListViewLayout'
 import Banner from 'components/Banner'
 import { JungleFarm } from 'state/types'
 import DisplayJungleFarms from './components/DisplayJungleFarms'
 import ListViewMenu from '../../components/ListViewMenu'
 import HarvestAll from './components/Actions/HarvestAll'
+import useActiveWeb3React from '../../hooks/useActiveWeb3React'
+import { useSetZapOutputList } from 'state/zap/hooks'
 
 const NUMBER_OF_FARMS_VISIBLE = 10
 
 const JungleFarms: React.FC = () => {
+  useSetJungleFarms()
   usePollJungleFarms()
+  const { chainId } = useActiveWeb3React()
   const [stakedOnly, setStakedOnly] = useState(false)
   const [observerIsSet, setObserverIsSet] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -35,6 +45,8 @@ const JungleFarms: React.FC = () => {
   const urlSearchedFarm = parseInt(params.get('id'))
   const isActive = !pathname.includes('history')
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const { jungleFarmTags } = useJungleFarmTags(chainId)
+  const { jungleFarmOrderings } = useJungleFarmOrderings(chainId)
   const handleChangeQuery = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value)
   }
@@ -58,7 +70,7 @@ const JungleFarms: React.FC = () => {
   }, [observerIsSet])
 
   const currJungleFarms = allJungleFarms.map((farm) => {
-    return { ...farm, isFinished: farm.jungleId === 0 ? false : farm.isFinished || currentBlock > farm.endBlock }
+    return { ...farm, isFinished: farm.isFinished || currentBlock > farm.endBlock }
   })
 
   const farmsWithHarvestAvailable = currJungleFarms.filter((farm) =>
@@ -98,8 +110,32 @@ const JungleFarms: React.FC = () => {
           },
           'desc',
         )
+      case 'hot':
+        return jungleFarmTags
+          ? orderBy(
+              farmsToSort,
+              (farm: JungleFarm) =>
+                jungleFarmTags?.find((tag) => tag.pid === farm.jungleId && tag.text.toLowerCase() === 'hot'),
+              'asc',
+            )
+          : farmsToSort
+      case 'new':
+        return jungleFarmTags
+          ? orderBy(
+              farmsToSort,
+              (farm: JungleFarm) =>
+                jungleFarmTags?.find((tag) => tag.pid === farm.jungleId && tag.text.toLowerCase() === 'new'),
+              'asc',
+            )
+          : farmsToSort
       default:
-        return orderBy(farmsToSort, (farm: JungleFarm) => farm.sortOrder, 'asc')
+        return jungleFarmOrderings
+          ? orderBy(
+              farmsToSort,
+              (farm: JungleFarm) => jungleFarmOrderings?.find((ordering) => ordering.pid === farm.jungleId)?.order,
+              'asc',
+            )
+          : farmsToSort
     }
   }
 
@@ -133,6 +169,16 @@ const JungleFarms: React.FC = () => {
     return sortJungleFarms(chosenJungleFarms).slice(0, numberOfFarmsVisible)
   }
 
+  // Set zap output list to match dual farms
+  useSetZapOutputList(
+    openFarms?.map((farm) => {
+      return {
+        currencyIdA: farm?.lpTokens.token.address[chainId],
+        currencyIdB: farm?.lpTokens.quoteToken.address[chainId],
+      }
+    }),
+  )
+
   return (
     <>
       <Flex
@@ -162,7 +208,11 @@ const JungleFarms: React.FC = () => {
               isJungle
             />
           </Flex>
-          <DisplayJungleFarms jungleFarms={renderJungleFarms()} openId={urlSearchedFarm} />
+          <DisplayJungleFarms
+            jungleFarms={renderJungleFarms()}
+            openId={urlSearchedFarm}
+            jungleFarmTags={jungleFarmTags}
+          />
         </ListViewLayout>
       </Flex>
       <div ref={loadMoreRef} />

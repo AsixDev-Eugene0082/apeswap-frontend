@@ -102,7 +102,7 @@ const Values: React.FC = () => {
           style={{ position: 'absolute', bottom: '35px', left: '0', width: '100%' }}
         >
           {[...Array(defaultValues(t).length)].map((_, i) => {
-            return <Bubble isActive={i === activeSlide} onClick={() => slideVal(i)} />
+            return <Bubble isActive={i === activeSlide} onClick={() => slideVal(i)} key={i} />
           })}
         </Flex>
       </ValuesWrapper>

@@ -22,6 +22,7 @@ export const Content = styled.div`
   justify-content: center;
   align-items: center;
   padding: 20px;
+  text-align: center;
 
   ${({ theme }) => theme.mediaQueries.sm} {
     padding: 24px 50px;

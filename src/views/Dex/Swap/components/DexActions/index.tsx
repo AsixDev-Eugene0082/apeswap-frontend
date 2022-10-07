@@ -3,11 +3,15 @@ import { Button, Flex, Text } from '@ape.swap/uikit'
 import UnlockButton from 'components/UnlockButton'
 import { RouterTypes } from 'config/constants'
 import { useTranslation } from 'contexts/Localization'
+import { useCurrency } from 'hooks/Tokens'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
+import { useBananaAddress } from 'hooks/useAddress'
 import { ApprovalState, useApproveCallbackFromTrade } from 'hooks/useApproveCallback'
 import { WrapType } from 'hooks/useWrapCallback'
 import React from 'react'
-import { useUserSlippageTolerance } from 'state/user/hooks'
+import { useHistory } from 'react-router-dom'
+import { useIsModalShown, useUserSlippageTolerance } from 'state/user/hooks'
+import { showCircular } from 'utils'
 import { warningSeverity } from 'utils/prices'
 import { styles } from './styles'
 import { DexActionProps } from './types'
@@ -22,21 +26,35 @@ const DexActions: React.FC<DexActionProps> = ({
   swapCallbackError,
   userHasSpecifiedInputOutput,
   routerType,
+  smartRouter,
   disabled,
   wrapInputError,
   onWrap,
   handleSwap,
   onPresentConfirmModal,
   setSwapState,
+  inputCurrency,
 }) => {
   const { t } = useTranslation()
-  const { account } = useActiveWeb3React()
+  const { account, chainId } = useActiveWeb3React()
+  const history = useHistory()
+  const { showSellModal } = useIsModalShown()
+  const bananaToken = useCurrency(useBananaAddress())
+
+  const sellingBanana = inputCurrency === bananaToken
+  const displaySellCircular = () => showSellModal && showCircular(chainId, history, '?modal=circular-sell')
 
   // get custom setting values for user
   const [allowedSlippage] = useUserSlippageTolerance()
 
   // check whether the user has approved the router on the input token
-  const [approval, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage, false, routerType)
+  const [approval, approveCallback] = useApproveCallbackFromTrade(
+    trade,
+    allowedSlippage,
+    false,
+    routerType,
+    smartRouter,
+  )
 
   // warnings on slippage
   const priceImpactSeverity = warningSeverity(priceImpactWithoutFee)
@@ -59,7 +77,7 @@ const DexActions: React.FC<DexActionProps> = ({
         </Button>
       )
     }
-    if (!trade?.route && userHasSpecifiedInputOutput) {
+    if (!trade?.route && userHasSpecifiedInputOutput && !disabled) {
       return (
         <Text margin="10px 0px" sx={{ width: '100%', textAlign: 'center' }}>
           {t('Insufficient liquidity for this trade')}
@@ -76,7 +94,14 @@ const DexActions: React.FC<DexActionProps> = ({
         >
           {approval === ApprovalState.PENDING
             ? t('Approving')
-            : t('Approve %route% Router', { route: routerType === RouterTypes.BONUS ? RouterTypes.BONUS : 'APESWAP' })}
+            : t('Approve %route% Router', {
+                route:
+                  routerType === RouterTypes.BONUS
+                    ? RouterTypes.BONUS
+                    : routerType === RouterTypes.SMART
+                    ? RouterTypes.SMART
+                    : 'APESWAP',
+              })}
         </Button>
       )
     }
@@ -93,6 +118,7 @@ const DexActions: React.FC<DexActionProps> = ({
               swapErrorMessage: undefined,
               txHash: undefined,
             })
+            if (sellingBanana) displaySellCircular()
             onPresentConfirmModal()
           }
         }}

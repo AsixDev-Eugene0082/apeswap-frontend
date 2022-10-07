@@ -1,4 +1,4 @@
-import { CHAIN_ID } from 'config/constants/chains'
+import { ChainId } from '@ape.swap/sdk'
 import SwiperProvider from 'contexts/SwiperProvider'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import React from 'react'
@@ -23,7 +23,7 @@ const Home: React.FC = () => {
       <SwiperProvider>
         <News />
       </SwiperProvider>
-      {chainId === CHAIN_ID.BSC && (
+      {chainId === ChainId.BSC && (
         <SwiperProvider>
           <Services />
         </SwiperProvider>

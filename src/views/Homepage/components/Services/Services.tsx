@@ -1,5 +1,6 @@
+/** @jsxImportSource theme-ui */
 import React, { useEffect, useState } from 'react'
-import { Flex, Skeleton, Text } from '@apeswapfinance/uikit'
+import { Text, Flex, Skeleton } from '@ape.swap/uikit'
 import SwiperCore from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import useSwiper from 'hooks/useSwiper'
@@ -10,10 +11,10 @@ import { useFetchHomepageServiceStats, useHomepageServiceStats } from 'state/hoo
 import ServiceTokenDisplay from 'components/ServiceTokenDisplay'
 import { useTranslation } from 'contexts/Localization'
 import { getDotPos } from 'utils/getDotPos'
-import { ServiceWrapper, YieldCard, ColorWrap, Bubble } from './styles'
+import { styles, YieldCard } from './styles'
 import { defaultServiceData } from './defaultServiceData'
 
-const Services: React.FC = () => {
+const Services: React.FC<{ bab?: boolean }> = ({ bab }) => {
   const { swiper, setSwiper } = useSwiper()
   const [loadServices, setLoadServices] = useState(false)
   useFetchHomepageServiceStats(loadServices)
@@ -50,13 +51,13 @@ const Services: React.FC = () => {
         id === 'farmDetails'
           ? service.stakeToken.name.split('-')
           : id === 'billDetails'
-          ? service.lpTokenName.split('-')
+          ? service?.lpTokenName.split('-')
           : [service.stakeToken.name, service.rewardToken.name]
       const name =
         id === 'farmDetails'
           ? service.stakeToken.name
           : id === 'billDetails'
-          ? service.lpTokenName
+          ? service?.lpTokenName
           : service.rewardToken.name
       return { name, tokenImage }
     }
@@ -70,23 +71,28 @@ const Services: React.FC = () => {
     return (
       <>
         <Flex
-          flexDirection="column"
-          justifyContent="space-between"
-          style={{ position: 'absolute', bottom: '60px', height: '250px', width: '300px' }}
+          sx={{
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'absolute',
+            bottom: '60px',
+            height: '250px',
+            width: '93%',
+          }}
         >
           {stats?.map((stat) => {
             const { name, tokenImage } = handleEachService(id, stat)
             return (
-              <a href={stat.link} rel="noopener noreferrer" key={stat?.apr}>
+              <a href={stat?.link} rel="noopener noreferrer" key={stat?.apr}>
                 <Flex
-                  mt="5px"
-                  mb="5px"
-                  pl="20px"
-                  style={{
-                    width: '100%',
+                  sx={{
+                    width: ['100%', '100%', '95%'],
                     height: '70px',
                     background: 'rgba(11, 11, 11, .55)',
                     borderRadius: '10px',
+                    marginTop: '5px',
+                    marginBottom: '5px',
+                    paddingLeft: '20px',
                   }}
                 >
                   {id === 'farmDetails' ? (
@@ -111,21 +117,23 @@ const Services: React.FC = () => {
                   ) : (
                     <ServiceTokenDisplay token1={tokenImage[0]} />
                   )}
-                  <Flex pl="15px" justifyContent="center" flexDirection="column">
-                    <Text bold style={{ width: '100%', color: 'white' }}>
-                      {name}
-                    </Text>
+                  <Flex sx={{ paddingLeft: '15px', justifyContent: 'center', flexDirection: 'column' }}>
+                    <Text sx={{ width: '100%', color: 'white', fontWeight: 700 }}>{name}</Text>
                     {id === 'lendingDetails' ? (
-                      <Text style={{ width: '100%', color: 'white' }}>APY: {stat.apy.toFixed(2)}%</Text>
+                      <Text sx={{ width: '100%', color: 'primaryBright', fontWeight: 400 }}>
+                        APY: {stat.apy.toFixed(2)}%
+                      </Text>
                     ) : id === 'billDetails' ? (
-                      <Text style={{ width: '100%', color: 'white' }}>
+                      <Text sx={{ width: '100%', color: 'primaryBright', fontWeight: 400 }}>
                         Discount:{' '}
-                        <span style={{ color: stat.discount > 0 ? 'white' : '#DF4141' }}>
+                        <span sx={{ color: stat.discount > 0 ? 'primaryBright' : '#DF4141' }}>
                           {stat.discount.toFixed(2)}%
                         </span>
                       </Text>
                     ) : (
-                      <Text style={{ width: '100%', color: 'white' }}>APR: {(stat.apr * 100).toFixed(2)}%</Text>
+                      <Text sx={{ width: '100%', color: 'primaryBright', fontWeight: 400 }}>
+                        APR: {(stat.apr * 100).toFixed(2)}%
+                      </Text>
                     )}
                   </Flex>
                 </Flex>
@@ -134,8 +142,8 @@ const Services: React.FC = () => {
           })}
         </Flex>
         <a href={link} rel="noopener noreferrer">
-          <Flex alignItems="center" justifyContent="center" style={{ textAlign: 'center' }}>
-            <Text color="white" fontSize="16px" bold>
+          <Flex sx={{ alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+            <Text sx={{ color: 'primaryBright', fontSize: '16px', fontWeight: 700 }}>
               {t('See All')} {'>'}
             </Text>
           </Flex>
@@ -147,8 +155,24 @@ const Services: React.FC = () => {
   return (
     <>
       <div ref={observerRef} />
-      <ColorWrap>
-        <ServiceWrapper>
+      <Flex
+        sx={{ ...styles.colorWrap, background: (bab && 'white1') || 'white2', paddingTop: bab && ['50px', '100px'] }}
+      >
+        {bab && (
+          <Text
+            sx={{
+              textAlign: 'center',
+              lineHeight: ['38px', '45px'],
+              fontSize: ['25px', '30px'],
+              fontWeight: 700,
+              margin: '0 0 0 0',
+              width: ['80%', 'auto'],
+            }}
+          >
+            {t('Featured ApeSwap Products')}
+          </Text>
+        )}
+        <Flex sx={{ ...styles.serviceWrapper, padding: bab && '30px 0 90px 0', height: !bab && '610px' }}>
           {displayData ? (
             width < 1488 ? (
               <Swiper
@@ -158,6 +182,7 @@ const Services: React.FC = () => {
                 spaceBetween={20}
                 slidesPerView="auto"
                 loopedSlides={displayData?.length}
+                autoplay={{ delay: 5000 }}
                 loop
                 centeredSlides
                 resizeObserver
@@ -172,20 +197,41 @@ const Services: React.FC = () => {
               >
                 {displayData?.map((service) => {
                   return (
-                    <SwiperSlide style={{ maxWidth: '338px', minWidth: '338px' }} key={service.title}>
+                    <SwiperSlide
+                      style={{
+                        maxWidth: '338px',
+                        minWidth: '300px',
+                      }}
+                      key={service.title}
+                    >
                       <YieldCard image={service.backgroundImg}>
-                        <Flex flexDirection="column" justifyContent="space-between" style={{ height: '100%' }}>
-                          <Flex flexDirection="column">
-                            <Flex>
-                              <Text color="white" fontSize="23px" bold>
-                                {service.title}
-                              </Text>
-                            </Flex>
-                            <Flex padding="0px 40px 0px 0px">
-                              <Text color="white" bold fontSize="15px">
-                                {service.description}
-                              </Text>
-                            </Flex>
+                        <Flex
+                          sx={{
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            height: '100%',
+                            width: '100%',
+                          }}
+                        >
+                          <Flex sx={{ flexDirection: 'column', padding: ['15px 5px', '20px 5px'], gap: '5px' }}>
+                            <Text
+                              sx={{
+                                fontSize: '23px',
+                                color: 'primaryBright',
+                                fontWeight: 700,
+                              }}
+                            >
+                              {service.title}
+                            </Text>
+                            <Text
+                              sx={{
+                                fontSize: '15px',
+                                color: 'primaryBright',
+                                fontWeight: 700,
+                              }}
+                            >
+                              {service.description}
+                            </Text>
                           </Flex>
                           {displayStats(service.id, service.link, service.stats)}
                         </Flex>
@@ -198,18 +244,33 @@ const Services: React.FC = () => {
               displayData?.map((service) => {
                 return (
                   <YieldCard image={service.backgroundImg} key={service.id}>
-                    <Flex flexDirection="column" justifyContent="space-between" style={{ height: '100%' }}>
-                      <Flex flexDirection="column">
-                        <Flex>
-                          <Text color="white" fontSize="23px" bold>
-                            {service.title}
-                          </Text>
-                        </Flex>
-                        <Flex padding="0px 40px 0px 0px">
-                          <Text color="white" bold fontSize="15px">
-                            {service.description}
-                          </Text>
-                        </Flex>
+                    <Flex
+                      sx={{
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        height: '100%',
+                        width: '100%',
+                      }}
+                    >
+                      <Flex sx={{ flexDirection: 'column', padding: ['15px 5px', '20px 5px'], gap: '5px' }}>
+                        <Text
+                          sx={{
+                            fontSize: '23px',
+                            color: 'primaryBright',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {service.title}
+                        </Text>
+                        <Text
+                          sx={{
+                            fontSize: '15px',
+                            color: 'primaryBright',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {service.description}
+                        </Text>
                       </Flex>
                       {displayStats(service.id, service.link, service.stats)}
                     </Flex>
@@ -218,25 +279,40 @@ const Services: React.FC = () => {
               })
             )
           ) : (
-            [...Array(4)].map(() => {
+            [...Array(4)].map((i) => {
               return (
-                <YieldCard>
+                <YieldCard key={i}>
                   <Skeleton height="100%" width="100%" />
                 </YieldCard>
               )
             })
           )}
           <Flex
-            justifyContent="center"
-            alignContent="center"
-            style={{ position: 'absolute', bottom: '35px', left: '0', width: '100%' }}
+            sx={{
+              justifyContent: 'center',
+              alignContent: 'center',
+              position: 'absolute',
+              bottom: '35px',
+              left: '0',
+              width: '100%',
+            }}
           >
             {[...Array(displayData?.length)].map((_, i) => {
-              return <Bubble isActive={i === activeSlide} onClick={() => slideNewsNav(i)} />
+              return (
+                <Flex
+                  sx={{
+                    ...styles.bubble,
+                    background:
+                      (i === activeSlide && 'linear-gradient(53.53deg, #a16552 15.88%, #e1b242 92.56%)') || 'white4',
+                  }}
+                  onClick={() => slideNewsNav(i)}
+                  key={i}
+                />
+              )
             })}
           </Flex>
-        </ServiceWrapper>
-      </ColorWrap>
+        </Flex>
+      </Flex>
     </>
   )
 }

@@ -66,7 +66,11 @@ const DepositModal: React.FC<DepositModalProps> = ({ onConfirm, onDismiss, tier 
         {ownedFilteredNfas?.length !== 0 || ownedFilteredNfas === undefined ? (
           ownedFilteredNfas?.map((nfa) => {
             return (
-              <Nfa onClick={() => handleNfaChange(nfa.index)} active={selectedNfas?.includes(nfa.index)}>
+              <Nfa
+                onClick={() => handleNfaChange(nfa.index)}
+                active={selectedNfas?.includes(nfa.index)}
+                key={nfa.index}
+              >
                 <Image src={nfa.image} alt={nfa.name} rarityTier={nfa.attributes.rarityTierNumber} />
               </Nfa>
             )

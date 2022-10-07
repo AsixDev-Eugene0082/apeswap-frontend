@@ -5,10 +5,6 @@ export const OPTIONS = [
     label: 'All',
     value: 'all',
   },
-  // {
-  //   label: 'New',
-  //   value: 'new',
-  // },
   {
     label: 'Blue Chips',
     value: 'blueChips',
@@ -24,6 +20,14 @@ export const OPTIONS = [
   {
     label: 'Liquidity',
     value: 'liquidity',
+  },
+  {
+    label: 'Hot',
+    value: 'hot',
+  },
+  {
+    label: 'New',
+    value: 'new',
   },
 ]
 
@@ -43,6 +47,14 @@ export const JUNGLE_OPTIONS = [
   {
     label: 'Earned',
     value: 'earned',
+  },
+  {
+    label: 'Hot',
+    value: 'hot',
+  },
+  {
+    label: 'New',
+    value: 'new',
   },
 ]
 

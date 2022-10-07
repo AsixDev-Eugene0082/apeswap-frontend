@@ -31,6 +31,7 @@ const UserBillListView: React.FC<{ bills: Bills[]; showAll?: boolean }> = ({ bil
       )?.toFixed(4)
       return {
         tokens: { token1: token.symbol, token2: quoteToken.symbol, token3: earnToken.symbol },
+        stakeLp: true,
         id: ownedBill.id,
         billArrow: true,
         title: (

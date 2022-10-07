@@ -1,4 +1,4 @@
-import { Currency, CurrencyAmount, Percent, Price, TokenAmount } from '@apeswapfinance/sdk'
+import { Currency, CurrencyAmount, Percent, Price, TokenAmount } from '@ape.swap/sdk'
 
 export interface AddLiquidityModalProps {
   currencies: { CURRENCY_A?: Currency; CURRENCY_B?: Currency }

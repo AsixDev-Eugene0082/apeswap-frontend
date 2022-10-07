@@ -15,7 +15,7 @@ export const defaultServiceData: (t: ContextApi['t']) => DefaultServiceData[] = 
     title: t('Yield Farms'),
     description: t('Earn BANANA or partner tokens by staking LP tokens'),
     backgroundImg: 'images/homepage-farms',
-    link: '/farms',
+    link: '/banana-farms',
     stats: [],
   },
   {

@@ -1,22 +1,15 @@
-import poolsConfig from 'config/constants/pools'
 import sousChefABI from 'config/abi/sousChef.json'
 import masterChefABI from 'config/abi/masterchef.json'
 import erc20ABI from 'config/abi/erc20.json'
-import { QuoteToken } from 'config/constants/types'
 import { getMasterChefAddress } from 'utils/addressHelper'
 import { getContract } from 'utils/getContract'
 import multicall from 'utils/multicall'
 import BigNumber from 'bignumber.js'
-import getProvider from 'utils/getProvider'
+import { QuoteToken } from 'config/constants/types'
+import { Pool } from 'state/types'
 
-// Pool 0, Cake / Cake is a different kind of contract (master chef)
-// BNB pools use the native BNB token (wrapping ? unwrapping is done at the contract level)
-const nonBnbPools = poolsConfig.filter((p) => p.stakingToken.address !== QuoteToken.BNB)
-const bnbPools = poolsConfig.filter((p) => p.stakingToken.address === QuoteToken.BNB)
-const nonMasterPools = poolsConfig.filter((p) => p.sousId !== 0)
-const provider = getProvider(56)
-
-export const fetchPoolsAllowance = async (chainId: number, account) => {
+export const fetchPoolsAllowance = async (chainId: number, account, poolsConfig: Pool[]) => {
+  const nonBnbPools = poolsConfig.filter((p) => p.stakingToken.address !== QuoteToken.BNB)
   const calls = nonBnbPools.map((p) => ({
     address: p.stakingToken.address[chainId],
     name: 'allowance',
@@ -30,8 +23,9 @@ export const fetchPoolsAllowance = async (chainId: number, account) => {
   )
 }
 
-export const fetchUserBalances = async (chainId: number, account) => {
+export const fetchUserBalances = async (chainId: number, account, poolsConfig: Pool[]) => {
   // Non BNB pools
+  const nonBnbPools = poolsConfig.filter((p) => p.stakingToken.address !== QuoteToken.BNB)
   const calls = nonBnbPools.map((p) => ({
     address: p.stakingToken.address[chainId],
     name: 'balanceOf',
@@ -43,17 +37,11 @@ export const fetchUserBalances = async (chainId: number, account) => {
     {},
   )
 
-  // BNB pools
-  const bnbBalance = await provider.getBalance(account)
-  const bnbBalances = bnbPools.reduce(
-    (acc, pool) => ({ ...acc, [pool.sousId]: new BigNumber(bnbBalance).toJSON() }),
-    {},
-  )
-
-  return { ...tokenBalances, ...bnbBalances }
+  return { ...tokenBalances }
 }
 
-export const fetchUserStakeBalances = async (chainId: number, account) => {
+export const fetchUserStakeBalances = async (chainId: number, account, poolsConfig: Pool[]) => {
+  const nonMasterPools = poolsConfig.filter((p) => p.sousId !== 0)
   const masterChefAddress = getMasterChefAddress(chainId)
   const masterChefContract = getContract(masterChefABI, masterChefAddress, chainId)
   const calls = nonMasterPools.map((p) => ({
@@ -75,7 +63,8 @@ export const fetchUserStakeBalances = async (chainId: number, account) => {
   return { ...stakedBalances, 0: new BigNumber(masterPoolAmount.toString()).toJSON() }
 }
 
-export const fetchUserPendingRewards = async (chainId: number, account) => {
+export const fetchUserPendingRewards = async (chainId: number, account, poolsConfig: Pool[]) => {
+  const nonMasterPools = poolsConfig.filter((p) => p.sousId !== 0)
   const masterChefAddress = getMasterChefAddress(chainId)
   const masterChefContract = getContract(masterChefABI, masterChefAddress, chainId)
   const calls = nonMasterPools.map((p) => ({

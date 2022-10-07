@@ -46,7 +46,7 @@ const ListViewMenu: React.FC<ListViewProps> = ({
           <Select size="sm" width="126px" onChange={(e) => onSetSortOption(e.target.value)} active={activeOption}>
             {displayOptions.map((option) => {
               return (
-                <SelectItem size="sm" value={option.value}>
+                <SelectItem size="sm" value={option.value} key={option?.label}>
                   <Text>{t(option.label)}</Text>
                 </SelectItem>
               )

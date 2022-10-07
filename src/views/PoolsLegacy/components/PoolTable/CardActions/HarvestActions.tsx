@@ -1,7 +1,5 @@
 import React, { useState, useRef } from 'react'
 import styled from 'styled-components'
-import Reward from 'react-rewards'
-import rewards from 'config/constants/rewards'
 import { Button } from '@apeswapfinance/uikit'
 import BigNumber from 'bignumber.js'
 import useReward from 'hooks/useReward'
@@ -40,7 +38,6 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
   const rewardRef = useRef(null)
   const rewardRefApeHarder = useRef(null)
   const [pendingTx, setPendingTx] = useState(false)
-  const [typeOfReward, setTypeOfReward] = useState('rewardBanana')
   const { onHarvest } = useSousHarvest(sousId)
   const onApeHarder = useReward(rewardRefApeHarder, useSousStake(sousId).onStake)
   const onEmergencyWithdraw = useReward(rewardRef, useSousEmergencyWithdraw(sousId).onEmergencyWithdraw)
@@ -52,9 +49,7 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
           disabled={earningTokenBalance === 0 || pendingTx}
           onClick={async () => {
             setPendingTx(true)
-            setTypeOfReward('rewardBanana')
             await onEmergencyWithdraw().catch(() => {
-              setTypeOfReward('error')
               rewardRefApeHarder.current?.rewardMe()
             })
             setPendingTx(false)
@@ -70,9 +65,7 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
           disabled={earningTokenBalance === 0 || pendingTx}
           onClick={async () => {
             setPendingTx(true)
-            setTypeOfReward('rewardBanana')
             await onApeHarder(earningTokenBalance).catch(() => {
-              setTypeOfReward('error')
               rewardRefApeHarder.current?.rewardMe()
             })
             setPendingTx(false)
@@ -87,9 +80,7 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
         disabled={earningTokenBalance === 0 || pendingTx}
         onClick={async () => {
           setPendingTx(true)
-          setTypeOfReward('rewardBanana')
           await onHarvest().catch(() => {
-            setTypeOfReward('error')
             rewardRef.current?.rewardMe()
           })
           setPendingTx(false)
@@ -100,11 +91,7 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({
     )
   }
 
-  return (
-    <Reward ref={rewardRef} type="emoji" config={rewards[typeOfReward]}>
-      {renderButton()}
-    </Reward>
-  )
+  return renderButton()
 }
 
 export default HarvestActions

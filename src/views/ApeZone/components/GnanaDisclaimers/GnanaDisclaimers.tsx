@@ -50,7 +50,7 @@ export const GnanaDisclaimers: React.FC = () => {
     <Container>
       <Main>
         <FirstHeaderCon>
-          <FirstHeader as="h1">{t('GNANA BREAKDOWN')}</FirstHeader>
+          <FirstHeader as="h2">{t('GNANA BREAKDOWN')}</FirstHeader>
         </FirstHeaderCon>
 
         <Sect>

@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { Card, Heading, Text, Flex } from '@apeswapfinance/uikit'
 import styled from 'styled-components'
 import { FarmPool } from 'state/types'
+import { useAllPools } from 'state/pools/hooks'
+import { useFarms } from 'state/farms/hooks'
 import { Box } from 'theme-ui'
 import { useTranslation } from 'contexts/Localization'
-import { farmsConfig } from 'config/constants'
 import ExpandableSectionButton from 'components/ExpandableSectionButton'
-import { useAllPools } from 'state/hooks'
 import DetailsSection from './DetailsSection'
 import CardValue from './CardValue'
 import StatsImageCard from './StatsImageCard'
@@ -43,13 +43,14 @@ const ExpandingWrapper = styled.div<{ expanded: boolean }>`
 const CardStats: React.FC<PoolStatsProps> = ({ data, type, forceDetails = false }) => {
   const { t } = useTranslation()
   const pools = useAllPools()
+  const farms = useFarms(null)
   const bscScanAddress = `https://bscscan.com/address/${data.address}`
   let farmName = data.name
     .replace(/[\])}[{(]/g, '')
     .replace('WBNB', 'BNB')
     .toUpperCase()
-  let farmImage = type !== 'pool' && farmsConfig.find((farm) => farm.pid === data.pid).image
-  const filteredFarm = type !== 'pool' && farmsConfig.find((farm) => farm.pid === data.pid)
+  let farmImage = type !== 'pool' && farms.find((farm) => farm.pid === data.pid).image
+  const filteredFarm = type !== 'pool' && farms.find((farm) => farm.pid === data.pid)
   const [showExpandableSection, setShowExpandableSection] = useState(false)
   if (type === 'pool') {
     const currentPool = pools.find((pool) => pool.sousId === data.id) || pools[0]

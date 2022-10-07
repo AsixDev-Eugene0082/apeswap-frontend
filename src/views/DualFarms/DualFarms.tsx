@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import BigNumber from 'bignumber.js'
 import { Flex } from '@apeswapfinance/uikit'
-import { useFarmTags, useFetchFarmLpAprs } from 'state/hooks'
-import { useDualFarms, usePollDualFarms } from 'state/dualFarms/hooks'
+import { useFetchFarmLpAprs } from 'state/hooks'
+import { useDualFarms, usePollDualFarms, useSetDualFarms } from 'state/dualFarms/hooks'
+import { useFarmOrderings, useFarmTags } from 'state/farms/hooks'
 import { DualFarm } from 'state/types'
 import { orderBy } from 'lodash'
 import ListViewLayout from 'components/layout/ListViewLayout'
@@ -14,6 +15,7 @@ import HarvestAllAction from './components/CardActions/HarvestAllAction'
 import DisplayFarms from './components/DisplayFarms'
 import { BLUE_CHIPS, NUMBER_OF_FARMS_VISIBLE, STABLES } from '../Farms/constants'
 import useActiveWeb3React from '../../hooks/useActiveWeb3React'
+import { useSetZapOutputList } from 'state/zap/hooks'
 
 const { search } = window.location
 const params = new URLSearchParams(search)
@@ -21,10 +23,12 @@ const params = new URLSearchParams(search)
 const urlSearchedFarm = parseInt(params.get('pid'))
 
 const DualFarms: React.FC = () => {
+  useSetDualFarms()
   usePollDualFarms()
   const { account, chainId } = useActiveWeb3React()
   useFetchFarmLpAprs(chainId)
   const { farmTags } = useFarmTags(chainId)
+  const { farmOrderings } = useFarmOrderings(chainId)
 
   const { t } = useTranslation()
   const { pathname } = useLocation()
@@ -118,7 +122,13 @@ const DualFarms: React.FC = () => {
 
     switch (sortOption) {
       case 'all':
-        return farms.slice(0, numberOfFarmsVisible)
+        return farmOrderings
+          ? orderBy(
+              farms,
+              (farm: DualFarm) => farmOrderings.find((ordering) => ordering.pid === farm.pid)?.order,
+              'asc',
+            ).slice(0, numberOfFarmsVisible)
+          : farms.slice(0, numberOfFarmsVisible)
       case 'stables':
         return farms
           .filter(
@@ -128,8 +138,22 @@ const DualFarms: React.FC = () => {
           .slice(0, numberOfFarmsVisible)
       case 'apr':
         return orderBy(farms, (farm) => parseFloat(farm.apy), 'desc').slice(0, numberOfFarmsVisible)
+      case 'hot':
+        return farmTags
+          ? orderBy(
+              farms,
+              (farm: DualFarm) => farmTags?.find((tag) => tag.pid === farm.pid && tag.text.toLowerCase() === 'hot'),
+              'asc',
+            ).slice(0, numberOfFarmsVisible)
+          : farms.slice(0, numberOfFarmsVisible)
       case 'new':
-        return farms
+        return farmTags
+          ? orderBy(
+              farms,
+              (farm: DualFarm) => farmTags?.find((tag) => tag.pid === farm.pid && tag.text.toLowerCase() === 'new'),
+              'asc',
+            ).slice(0, numberOfFarmsVisible)
+          : farms.slice(0, numberOfFarmsVisible)
       case 'blueChips':
         return farms
           .filter(
@@ -141,9 +165,25 @@ const DualFarms: React.FC = () => {
       case 'liquidity':
         return orderBy(farms, (farm: DualFarm) => parseFloat(farm.totalStaked), 'desc').slice(0, numberOfFarmsVisible)
       default:
-        return farms.slice(0, numberOfFarmsVisible)
+        return farmOrderings
+          ? orderBy(
+              farms,
+              (farm: DualFarm) => farmOrderings.find((ordering) => ordering.pid === farm.pid)?.order,
+              'asc',
+            ).slice(0, numberOfFarmsVisible)
+          : farms.slice(0, numberOfFarmsVisible)
     }
   }
+
+  // Set zap output list to match dual farms
+  useSetZapOutputList(
+    activeFarms?.map((farm) => {
+      return {
+        currencyIdA: farm?.stakeTokens.token0.address[chainId],
+        currencyIdB: farm?.stakeTokens.token1.address[chainId],
+      }
+    }),
+  )
 
   return (
     <>

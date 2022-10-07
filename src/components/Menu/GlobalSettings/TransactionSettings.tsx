@@ -19,8 +19,12 @@ enum DeadlineError {
 
 const inputRegex = RegExp(`^\\d*(?:\\\\[.])?\\d*$`) // match escaped "." characters via in a non-capturing group
 
-const SlippageTabs = () => {
-  const [userSlippageTolerance, setUserSlippageTolerance] = useUserSlippageTolerance()
+interface SlippageTabsProps {
+  zapSettings?: boolean
+}
+
+const SlippageTabs: React.FC<SlippageTabsProps> = ({ zapSettings }) => {
+  const [userSlippageTolerance, setUserSlippageTolerance] = useUserSlippageTolerance(zapSettings)
   const [ttl, setTtl] = useUserTransactionTTL()
   const [slippageInput, setSlippageInput] = useState('')
   const [deadlineInput, setDeadlineInput] = useState('')

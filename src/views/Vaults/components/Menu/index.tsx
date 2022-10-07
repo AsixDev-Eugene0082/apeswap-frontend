@@ -35,7 +35,7 @@ const VaultMenu: React.FC<ListViewProps> = ({
         <Select size="sm" width="140px" onChange={(e) => onSetSortOption(e.target.value)} active={activeOption}>
           {OPTIONS.map((option) => {
             return (
-              <SelectItem size="sm" value={option.value}>
+              <SelectItem size="sm" value={option.value} key={option.label}>
                 <Text>{option.label}</Text>
               </SelectItem>
             )
@@ -46,7 +46,7 @@ const VaultMenu: React.FC<ListViewProps> = ({
         <Select size="sm" width="126px" onChange={(e) => onSetVaultType(e.target.value)} active={activeVaultType}>
           {TOKEN_OPTIONS.map((option) => {
             return (
-              <SelectItem size="sm" value={option.value}>
+              <SelectItem size="sm" value={option.value} key={option.label}>
                 <Text>{option.label}</Text>
               </SelectItem>
             )

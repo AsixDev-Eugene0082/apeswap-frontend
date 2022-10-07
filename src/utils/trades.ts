@@ -1,4 +1,4 @@
-import { Trade, Percent, currencyEquals } from '@apeswapfinance/sdk'
+import { Trade, Percent, currencyEquals } from '@ape.swap/sdk'
 import { ZERO_PERCENT, ONE_HUNDRED_PERCENT } from '../config/constants/index'
 
 // returns whether tradeB is better than tradeA by at least a threshold percentage amount
@@ -18,7 +18,6 @@ export function isTradeBetter(
   ) {
     throw new Error('Trades are not comparable')
   }
-
   if (minimumDelta.equalTo(ZERO_PERCENT)) {
     return tradeA.executionPrice.lessThan(tradeB.executionPrice)
   }

@@ -65,7 +65,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, sta
         {mappedNfas.length !== 0 ? (
           mappedNfas?.map((nfa) => {
             return (
-              <Nfa onClick={() => handleNfaChange(nfa.index)} active={selectedNfas.includes(nfa.index)}>
+              <Nfa onClick={() => handleNfaChange(nfa.index)} active={selectedNfas.includes(nfa.index)} key={nfa.index}>
                 <Image src={nfa.image} alt={nfa.name} rarityTier={nfa.attributes.rarityTierNumber} />
               </Nfa>
             )

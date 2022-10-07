@@ -1,5 +1,5 @@
 import React from 'react'
-import { Currency, Token } from '@apeswapfinance/sdk'
+import { Currency, Token } from '@ape.swap/sdk'
 import { Button, Text, Modal, useModal, ModalProps, Link } from '@apeswapfinance/uikit'
 import styled from 'styled-components'
 import { AutoRow } from 'components/layout/Row'

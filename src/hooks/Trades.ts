@@ -1,10 +1,11 @@
 /* eslint-disable no-param-reassign */
 import { isTradeBetter } from 'utils/trades'
-import { Currency, CurrencyAmount, Pair, Token, Trade } from '@apeswapfinance/sdk'
+import { Currency, CurrencyAmount, Token, Trade, Pair, SmartRouter } from '@ape.swap/sdk'
 import flatMap from 'lodash/flatMap'
 import { useMemo } from 'react'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
-
+import { APE_PRICE_IMPACT, PRIORITY_SMART_ROUTERS } from 'config/constants/chains'
+import { SwapDelay } from 'state/swap/actions'
 import { useUserSingleHopOnly } from 'state/user/hooks'
 import {
   BASES_TO_CHECK_TRADES_AGAINST,
@@ -12,12 +13,12 @@ import {
   BETTER_TRADE_LESS_HOPS_THRESHOLD,
   ADDITIONAL_BASES,
 } from '../config/constants'
-import { PairState, usePairs } from './usePairs'
+import { PairState, useAllSmartPairs } from './usePairs'
 import { wrappedCurrency } from '../utils/wrappedCurrency'
 
 import { useUnsupportedTokens } from './Tokens'
 
-function useAllCommonPairs(currencyA?: Currency, currencyB?: Currency): Pair[] {
+export function useAllCommonPairs(currencyA?: Currency, currencyB?: Currency) {
   const { chainId } = useActiveWeb3React()
 
   const [tokenA, tokenB] = chainId
@@ -72,21 +73,26 @@ function useAllCommonPairs(currencyA?: Currency, currencyB?: Currency): Pair[] {
     [tokenA, tokenB, bases, basePairs, chainId],
   )
 
-  const allPairs = usePairs(allPairCombinations)
+  const allPairs = useAllSmartPairs(allPairCombinations)
 
   // only pass along valid pairs, non-duplicated pairs
+  // Since useMemo was re-calculating each pair from the list on each keystroke we will only update on valid pair length changing and token switches
   return useMemo(
     () =>
-      Object.values(
-        allPairs
-          // filter out invalid pairs
-          .filter((result): result is [PairState.EXISTS, Pair] => Boolean(result[0] === PairState.EXISTS && result[1]))
-          // filter out duplicated pairs
-          .reduce<{ [pairAddress: string]: Pair }>((memo, [, curr]) => {
-            memo[curr.liquidityToken.address] = memo[curr.liquidityToken.address] ?? curr
-            return memo
-          }, {}),
-      ),
+      allPairs.map((currPair) => {
+        return Object.values(
+          currPair
+            // filter out invalid pairs
+            .filter((result): result is [PairState.EXISTS, Pair] =>
+              Boolean(result[0] === PairState.EXISTS && result[1]),
+            )
+            // filter out duplicated pairs
+            .reduce<{ [pairAddress: string]: Pair }>((memo, [, curr]) => {
+              memo[curr.liquidityToken.address] = memo[curr.liquidityToken.address] ?? curr
+              return memo
+            }, {}),
+        )
+      }),
     [allPairs],
   )
 }
@@ -96,67 +102,160 @@ const MAX_HOPS = 3
 /**
  * Returns the best trade for the exact amount of tokens in to the given token out
  */
-export function useTradeExactIn(currencyAmountIn?: CurrencyAmount, currencyOut?: Currency): Trade | null {
-  const allowedPairs = useAllCommonPairs(currencyAmountIn?.currency, currencyOut)
 
+let bestTradeExactIn = null
+
+export function useTradeExactIn(
+  currencyAmountIn?: CurrencyAmount,
+  currencyOut?: Currency,
+  swapDelay?: SwapDelay,
+  onSetSwapDelay?: (swapDelay: SwapDelay) => void,
+): Trade | null {
+  const allowedPairs = useAllCommonPairs(currencyAmountIn?.currency, currencyOut)
+  const { chainId } = useActiveWeb3React()
   const [singleHopOnly] = useUserSingleHopOnly()
 
-  return useMemo(() => {
-    if (currencyAmountIn && currencyOut && allowedPairs.length > 0) {
-      if (singleHopOnly) {
-        return (
-          Trade.bestTradeExactIn(allowedPairs, currencyAmountIn, currencyOut, { maxHops: 1, maxNumResults: 1 })[0] ??
-          null
-        )
-      }
-      // search through trades with varying hops, find best trade out of them
-      let bestTradeSoFar: Trade | null = null
-      for (let i = 1; i <= MAX_HOPS; i++) {
-        const currentTrade: Trade | null =
-          Trade.bestTradeExactIn(allowedPairs, currencyAmountIn, currencyOut, { maxHops: i, maxNumResults: 1 })[0] ??
-          null
-        // if current trade is best yet, save it
-        if (isTradeBetter(bestTradeSoFar, currentTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
-          bestTradeSoFar = currentTrade
-        }
-      }
-      return bestTradeSoFar
+  bestTradeExactIn = useMemo(() => {
+    if (!currencyAmountIn) {
+      return null
+    }
+    if (swapDelay !== SwapDelay.USER_INPUT_COMPLETE && swapDelay !== SwapDelay.SWAP_REFRESH) {
+      return bestTradeExactIn
     }
 
-    return null
-  }, [allowedPairs, currencyAmountIn, currencyOut, singleHopOnly])
+    // search through trades with varying hops, find best trade out of them
+    let bestTradeSoFar: Trade | null = null
+    // Save the best ApeRouter trade if it exists
+    let bestApeTradeSoFar: Trade | null = null
+    for (let index = 0; index < allowedPairs.length; index++) {
+      if (currencyAmountIn && currencyOut && allowedPairs[index].length > 0) {
+        if (singleHopOnly) {
+          const currentSingleHopTrade =
+            Trade.bestTradeExactIn(allowedPairs[index], currencyAmountIn, currencyOut, {
+              maxHops: 1,
+              maxNumResults: 1,
+            })[0] ?? null
+          if (isTradeBetter(bestTradeSoFar, currentSingleHopTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
+            // if current trade is best yet, save it
+            bestTradeSoFar = currentSingleHopTrade
+          }
+          if (index === allowedPairs.length - 1) {
+            break
+          }
+        } else {
+          for (let i = 1; i <= MAX_HOPS; i++) {
+            const currentTrade: Trade | null =
+              Trade.bestTradeExactIn(allowedPairs[index], currencyAmountIn, currencyOut, {
+                maxHops: i,
+                maxNumResults: 1,
+              })[0] ?? null
+
+            if (PRIORITY_SMART_ROUTERS[chainId][0] === SmartRouter.APE) {
+              if (currentTrade?.route?.pairs?.[0]?.router === SmartRouter.APE) {
+                if (isTradeBetter(bestApeTradeSoFar, currentTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
+                  bestApeTradeSoFar = currentTrade
+                }
+              }
+            }
+            if (isTradeBetter(bestTradeSoFar, currentTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
+              // if current trade is best yet, save it
+              bestTradeSoFar = currentTrade
+            }
+          }
+        }
+      }
+    }
+    if (swapDelay !== SwapDelay.SWAP_REFRESH) {
+      onSetSwapDelay(SwapDelay.SWAP_COMPLETE)
+    }
+    if (bestApeTradeSoFar) {
+      if (parseFloat(bestApeTradeSoFar.priceImpact.toSignificant(6)) < APE_PRICE_IMPACT) {
+        return bestApeTradeSoFar
+      }
+    }
+    return bestTradeSoFar
+  }, [allowedPairs, currencyAmountIn, currencyOut, singleHopOnly, chainId, swapDelay, onSetSwapDelay])
+
+  return bestTradeExactIn
 }
 
 /**
  * Returns the best trade for the token in to the exact amount of token out
  */
-export function useTradeExactOut(currencyIn?: Currency, currencyAmountOut?: CurrencyAmount): Trade | null {
+
+let bestTradeExactOut = null
+
+export function useTradeExactOut(
+  currencyIn?: Currency,
+  currencyAmountOut?: CurrencyAmount,
+  swapDelay?: SwapDelay,
+  onSetSwapDelay?: (swapDelay: SwapDelay) => void,
+): Trade | null {
   const allowedPairs = useAllCommonPairs(currencyIn, currencyAmountOut?.currency)
+  const { chainId } = useActiveWeb3React()
 
   const [singleHopOnly] = useUserSingleHopOnly()
 
-  return useMemo(() => {
-    if (currencyIn && currencyAmountOut && allowedPairs.length > 0) {
-      if (singleHopOnly) {
-        return (
-          Trade.bestTradeExactOut(allowedPairs, currencyIn, currencyAmountOut, { maxHops: 1, maxNumResults: 1 })[0] ??
-          null
-        )
-      }
-      // search through trades with varying hops, find best trade out of them
-      let bestTradeSoFar: Trade | null = null
-      for (let i = 1; i <= MAX_HOPS; i++) {
-        const currentTrade =
-          Trade.bestTradeExactOut(allowedPairs, currencyIn, currencyAmountOut, { maxHops: i, maxNumResults: 1 })[0] ??
-          null
-        if (isTradeBetter(bestTradeSoFar, currentTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
-          bestTradeSoFar = currentTrade
+  bestTradeExactOut = useMemo(() => {
+    if (!currencyAmountOut) {
+      return null
+    }
+    if (swapDelay !== SwapDelay.USER_INPUT_COMPLETE && swapDelay !== SwapDelay.SWAP_REFRESH) {
+      return bestTradeExactOut
+    }
+    // search through trades with varying hops, find best trade out of them
+    let bestTradeSoFar: Trade | null = null
+    // Save the best ApeRouter trade if it exists
+    let bestApeTradeSoFar: Trade | null = null
+    for (let index = 0; index < allowedPairs.length; index++) {
+      if (currencyAmountOut && currencyIn && allowedPairs[index].length > 0) {
+        if (singleHopOnly) {
+          const currentSingleHopTrade =
+            Trade.bestTradeExactOut(allowedPairs[index], currencyIn, currencyAmountOut, {
+              maxHops: 1,
+              maxNumResults: 1,
+            })[0] ?? null
+          if (isTradeBetter(bestTradeSoFar, currentSingleHopTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
+            // if current trade is best yet, save it
+            bestTradeSoFar = currentSingleHopTrade
+          }
+          if (index === allowedPairs.length - 1) {
+            break
+          }
+        } else {
+          for (let i = 1; i <= MAX_HOPS; i++) {
+            const currentTrade: Trade | null =
+              Trade.bestTradeExactOut(allowedPairs[index], currencyIn, currencyAmountOut, {
+                maxHops: i,
+                maxNumResults: 1,
+              })[0] ?? null
+            if (PRIORITY_SMART_ROUTERS[chainId][0] === SmartRouter.APE) {
+              if (currentTrade?.route?.pairs?.[0]?.router === SmartRouter.APE) {
+                if (isTradeBetter(bestApeTradeSoFar, currentTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
+                  bestApeTradeSoFar = currentTrade
+                }
+              }
+            }
+            if (isTradeBetter(bestTradeSoFar, currentTrade, BETTER_TRADE_LESS_HOPS_THRESHOLD)) {
+              // if current trade is best yet, save it
+              bestTradeSoFar = currentTrade
+            }
+          }
         }
       }
-      return bestTradeSoFar
     }
-    return null
-  }, [currencyIn, currencyAmountOut, allowedPairs, singleHopOnly])
+    if (swapDelay !== SwapDelay.SWAP_REFRESH) {
+      onSetSwapDelay(SwapDelay.SWAP_COMPLETE)
+    }
+    if (bestApeTradeSoFar) {
+      if (parseFloat(bestApeTradeSoFar.priceImpact.toSignificant(6)) < APE_PRICE_IMPACT) {
+        return bestApeTradeSoFar
+      }
+    }
+    return bestTradeSoFar
+  }, [allowedPairs, currencyAmountOut, currencyIn, singleHopOnly, chainId, swapDelay, onSetSwapDelay])
+
+  return bestTradeExactOut
 }
 
 export function useIsTransactionUnsupported(currencyIn?: Currency, currencyOut?: Currency): boolean {

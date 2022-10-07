@@ -2,6 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import { CalculateIcon, useModal } from '@apeswapfinance/uikit'
 import ApyCalculatorModal from './ApyCalculatorModal'
+import { JungleFarm } from '../../state/types'
 
 export interface ApyButtonProps {
   lpLabel?: string
@@ -9,6 +10,7 @@ export interface ApyButtonProps {
   rewardTokenPrice?: number
   apy?: number
   addLiquidityUrl?: string
+  jungleFarm?: JungleFarm
 }
 
 const StyledCalculateIcon = styled(CalculateIcon)`
@@ -21,14 +23,13 @@ const StyledCalculateIcon = styled(CalculateIcon)`
   }
 `
 
-const ApyButton: React.FC<ApyButtonProps> = ({ lpLabel, rewardTokenPrice, apy, addLiquidityUrl, rewardTokenName }) => {
+const ApyButton: React.FC<ApyButtonProps> = ({ rewardTokenPrice, apy, rewardTokenName, jungleFarm }) => {
   const [onPresentApyModal] = useModal(
     <ApyCalculatorModal
-      lpLabel={lpLabel}
       rewardTokenName={rewardTokenName}
       rewardTokenPrice={rewardTokenPrice}
       apy={apy}
-      addLiquidityUrl={addLiquidityUrl}
+      jungleFarm={jungleFarm}
     />,
   )
 

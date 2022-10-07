@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js'
-import { vaultsConfig } from 'config/constants'
 import { VaultConfig } from 'config/constants/types'
-import { FarmLpAprsType, TokenPrices } from 'state/types'
+import { FarmLpAprsType, TokenPrices, Vault } from 'state/types'
 import { getFarmApr } from 'utils/apr'
 import {
   getRoi,
@@ -17,6 +16,7 @@ const cleanVaultData = (
   tokenPrices: TokenPrices[],
   farmLpAprs: FarmLpAprsType,
   chainId: number,
+  vaultsConfig: Vault[],
 ) => {
   const keeperFee = parseFloat(vaultSettings[1]) / 100
   const withdrawFee = parseFloat(vaultSettings[5]) / 100

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { HelpIcon } from '@apeswapfinance/uikit'
+import { MissingIcon } from '@ape.swap/uikit'
 
 const BAD_SRCS: { [tokenAddress: string]: true } = {}
 
@@ -33,7 +33,7 @@ const Logo: React.FC<LogoProps> = ({ srcs, alt, width, height, ...rest }) => {
     )
   }
 
-  return <HelpIcon {...rest} color="white" />
+  return <MissingIcon {...rest} color="white" />
 }
 
 export default React.memo(Logo)

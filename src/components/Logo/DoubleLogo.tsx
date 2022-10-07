@@ -1,4 +1,4 @@
-import { Currency } from '@apeswapfinance/sdk'
+import { Currency } from '@ape.swap/sdk'
 import React from 'react'
 import styled from 'styled-components'
 import CurrencyLogo from './CurrencyLogo'
@@ -31,7 +31,7 @@ export default function DoubleCurrencyLogo({
         <CurrencyLogo
           currency={currency1}
           size={`${size.toString()}px`}
-          style={{ transform: 'translate(-8px, 0px)' }}
+          style={{ transform: 'translate(-13px, 0px)' }}
         />
       )}
     </Wrapper>

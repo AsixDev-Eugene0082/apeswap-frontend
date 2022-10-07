@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { Token, TokenAmount } from '@apeswapfinance/sdk'
+import { Token, TokenAmount } from '@ape.swap/sdk'
+import { useSingleCallResult } from 'lib/hooks/multicall'
 import { useTokenContract } from './useContract'
-import { useSingleCallResult } from '../state/multicall/hooks'
 
 // returns undefined if input token is undefined, or fails to get token contract,
 // or contract total supply cannot be fetched

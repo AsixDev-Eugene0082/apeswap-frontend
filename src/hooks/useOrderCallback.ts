@@ -1,5 +1,5 @@
 import { parseEther } from '@ethersproject/units'
-import { Trade, Token } from '@apeswapfinance/sdk'
+import { Trade, Token } from '@ape.swap/sdk'
 import { useMemo } from 'react'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { getNativeWrappedAddress } from 'utils/addressHelper'

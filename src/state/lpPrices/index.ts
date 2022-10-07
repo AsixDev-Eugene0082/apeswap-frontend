@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { LpTokenPricesState, LpTokenPrices } from '../types'
+import { LpTokenPricesState, LpTokenPrices, AppThunk } from '../types'
 import fetchLpPrices from './fetchLpPrices'
 
 const initialState: LpTokenPricesState = {
@@ -32,13 +32,15 @@ export const lpTokenPricesSlice = createSlice({
 export const { lpTokenPricesFetchStart, lpTokenPricesFetchSucceeded, lpTokenPricesFetchFailed } =
   lpTokenPricesSlice.actions
 
-export const fetchLpTokenPrices = (chainId) => async (dispatch) => {
-  try {
-    dispatch(lpTokenPricesFetchStart())
-    const tokenPrices = await fetchLpPrices(chainId)
-    dispatch(lpTokenPricesFetchSucceeded(tokenPrices))
-  } catch (error) {
-    dispatch(lpTokenPricesFetchFailed())
+export const fetchLpTokenPrices =
+  (chainId, farms): AppThunk =>
+  async (dispatch) => {
+    try {
+      dispatch(lpTokenPricesFetchStart())
+      const tokenPrices = await fetchLpPrices(chainId, farms)
+      dispatch(lpTokenPricesFetchSucceeded(tokenPrices))
+    } catch (error) {
+      dispatch(lpTokenPricesFetchFailed())
+    }
   }
-}
 export default lpTokenPricesSlice.reducer

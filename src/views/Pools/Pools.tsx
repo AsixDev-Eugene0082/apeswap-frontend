@@ -8,9 +8,9 @@ import { Flex } from '@apeswapfinance/uikit'
 import orderBy from 'lodash/orderBy'
 import partition from 'lodash/partition'
 import { useTranslation } from 'contexts/Localization'
-import { useBlock } from 'state/block/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { usePollPools, usePools, usePoolTags } from 'state/hooks'
+import { usePollPools, usePoolOrderings, usePools, usePoolTags, useSetPools } from 'state/pools/hooks'
 import ListViewLayout from 'components/layout/ListViewLayout'
 import Banner from 'components/Banner'
 import { Pool } from 'state/types'
@@ -20,20 +20,22 @@ import DisplayPools from './components/DisplayPools'
 const NUMBER_OF_POOLS_VISIBLE = 12
 
 const Pools: React.FC = () => {
+  useSetPools()
   usePollPools()
   const { chainId } = useActiveWeb3React()
   const [stakedOnly, setStakedOnly] = useState(false)
   const [tokenOption, setTokenOption] = useState('allTokens')
   const [observerIsSet, setObserverIsSet] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortOption, setSortOption] = useState('hot')
+  const [sortOption, setSortOption] = useState('all')
   const [numberOfPoolsVisible, setNumberOfPoolsVisible] = useState(NUMBER_OF_POOLS_VISIBLE)
   const { account } = useWeb3React()
   const { pathname } = useLocation()
   const allPools = usePools(account)
   const { poolTags } = usePoolTags(chainId)
+  const { poolOrderings } = usePoolOrderings(chainId)
   const { t } = useTranslation()
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const { search } = window.location
   const params = new URLSearchParams(search)
   const urlSearchedPool = parseInt(params.get('id'))
@@ -96,8 +98,30 @@ const Pools: React.FC = () => {
           (pool: Pool) => getBalanceNumber(pool.totalStaked) * pool.stakingToken?.price,
           'desc',
         )
+      case 'hot':
+        return poolTags
+          ? orderBy(
+              poolsToSort,
+              (pool: Pool) => poolTags?.find((tag) => tag.pid === pool.sousId && tag.text.toLowerCase() === 'hot'),
+              'asc',
+            )
+          : poolsToSort
+      case 'new':
+        return poolTags
+          ? orderBy(
+              poolsToSort,
+              (pool: Pool) => poolTags?.find((tag) => tag.pid === pool.sousId && tag.text.toLowerCase() === 'new'),
+              'asc',
+            )
+          : poolsToSort
       default:
-        return orderBy(poolsToSort, (pool: Pool) => pool.sortOrder, 'asc')
+        return poolOrderings
+          ? orderBy(
+              poolsToSort,
+              (pool: Pool) => poolOrderings?.find((ordering) => ordering.pid === pool.sousId)?.order,
+              'asc',
+            )
+          : poolsToSort
     }
   }
 
@@ -143,13 +167,7 @@ const Pools: React.FC = () => {
         style={{ position: 'relative', top: '30px', width: '100%' }}
       >
         <ListViewLayout>
-          <Banner
-            banner="pools"
-            link="https://apeswap.gitbook.io/apeswap-finance/product-and-features/stake/pools"
-            title={t('Staking Pools')}
-            listViewBreak
-            maxWidth={1130}
-          />
+          <Banner banner="pools" link="?modal=2" title={t('Staking Pools')} listViewBreak maxWidth={1130} />
           <Flex flexDirection="column" alignSelf="center" style={{ maxWidth: '1130px', width: '100%' }}>
             <PoolMenu
               onHandleQueryChange={handleChangeQuery}

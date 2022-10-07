@@ -19,6 +19,7 @@ import {
   ReadMore,
   WarningHeader,
 } from './styles'
+import SwiperProvider from '../../contexts/SwiperProvider'
 
 const Zone = () => {
   const [readingMore, setReadingMore] = useState(false)
@@ -68,7 +69,9 @@ const Zone = () => {
           <ReturnCard fromToken="GNANA" toToken="BANANA" />
         </Cards>
 
-        <GnanaUtility />
+        <SwiperProvider>
+          <GnanaUtility />
+        </SwiperProvider>
         <GnanaDisclaimers />
 
         <Spacer size="lg" />

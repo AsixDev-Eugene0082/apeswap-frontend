@@ -1,13 +1,12 @@
-import { poolsConfig } from 'config/constants'
 import sousChefABI from 'config/abi/sousChef.json'
 import bananaABI from 'config/abi/banana.json'
-import { TokenPrices } from 'state/types'
+import { Pool, TokenPrices } from 'state/types'
 import { chunk } from 'lodash'
 import multicall from 'utils/multicall'
 import fetchPoolCalls from './fetchPoolCalls'
 import cleanPoolData from './cleanPoolData'
 
-const fetchPools = async (chainId: number, tokenPrices: TokenPrices[]) => {
+const fetchPools = async (chainId: number, tokenPrices: TokenPrices[], poolsConfig: Pool[]) => {
   const poolIds = []
   const poolCalls = poolsConfig.flatMap((pool) => {
     poolIds.push(pool.sousId)
@@ -19,7 +18,7 @@ const fetchPools = async (chainId: number, tokenPrices: TokenPrices[]) => {
   const chunkSize = formattedVals.length / poolsConfig.length
   const chunkedPools = chunk(formattedVals, chunkSize)
 
-  return cleanPoolData(poolIds, chunkedPools, tokenPrices, chainId)
+  return cleanPoolData(poolIds, chunkedPools, tokenPrices, chainId, poolsConfig)
 }
 
 export default fetchPools

@@ -1,4 +1,4 @@
-import { Currency, currencyEquals, ETHER, WETH } from '@apeswapfinance/sdk'
+import { Currency, currencyEquals, ETHER, WETH } from '@ape.swap/sdk'
 import { useMemo } from 'react'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { tryParseAmount } from '../state/swap/hooks'

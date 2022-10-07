@@ -1,8 +1,8 @@
-import { Token, TokenAmount } from '@apeswapfinance/sdk'
+import { Token, TokenAmount } from '@ape.swap/sdk'
 import { useMemo } from 'react'
+import { useSingleCallResult } from 'lib/hooks/multicall'
 
 import { useTokenContract } from './useContract'
-import { useSingleCallResult } from '../state/multicall/hooks'
 
 function useTokenAllowance(token?: Token, owner?: string, spender?: string): TokenAmount | undefined {
   const contract = useTokenContract(token?.address, false)

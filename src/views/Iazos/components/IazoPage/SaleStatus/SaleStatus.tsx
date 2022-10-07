@@ -10,7 +10,7 @@ import BeforeSale from './BeforeSale'
 import CreatorAfter from './CreatorAfter'
 import { SaleStatusContainer } from './styles'
 
-interface SaleStatus {
+interface SaleStatusInterface {
   timeInfo: IazoTimeInfo
   hardcap: string
   baseToken: IazoTokenInfo
@@ -24,7 +24,7 @@ interface SaleStatus {
   iazoOwner: string
 }
 
-const SaleStatus: React.FC<SaleStatus> = ({
+const SaleStatus: React.FC<SaleStatusInterface> = ({
   timeInfo,
   hardcap,
   baseToken,

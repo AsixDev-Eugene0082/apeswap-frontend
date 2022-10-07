@@ -2,9 +2,9 @@ import apePriceGetterABI from 'config/abi/apePriceGetter.json'
 import multicall from 'utils/multicall'
 import { getApePriceGetterAddress } from 'utils/addressHelper'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { farmsConfig } from '../../config/constants'
+import { Farm } from 'state/types'
 
-const fetchLpPrices = async (chainId) => {
+const fetchLpPrices = async (chainId, farmsConfig: Farm[]) => {
   const apePriceGetterAddress = getApePriceGetterAddress(chainId)
   const tokensToCall = Object.keys(farmsConfig).filter((token) => farmsConfig[token].lpAddresses[chainId] !== undefined)
   const calls = tokensToCall.map((token) => {

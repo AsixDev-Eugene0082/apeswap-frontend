@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import { Flex, Text } from '@apeswapfinance/uikit'
 
 export const StyledIfoCardHeader = styled(Flex)`
+  text-align: initial;
   & > div {
     flex: 1;
   }

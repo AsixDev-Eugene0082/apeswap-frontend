@@ -10,6 +10,7 @@ import getHomepageTokenStats from './getHomepageTokenStats'
 import { computeStats } from './getStats'
 import fetchIfoStatus from './fetchIfoStatus'
 import fetchTagsFromApi from './fetchTagsFromApi'
+import fetchOrderingFromApi from './fetchOrderingFromApi'
 
 const initialState: StatsState = {
   isInitialized: false,
@@ -21,6 +22,7 @@ const initialState: StatsState = {
   HomepageServiceStats: null,
   FarmLpAprs: null,
   Tags: null,
+  Ordering: null,
   LiveIfo: null,
   data: null,
 }
@@ -74,6 +76,9 @@ export const statsSlice = createSlice({
     fetchTags: (state, action) => {
       state.Tags = action.payload
     },
+    fetchOrdering: (state, action) => {
+      state.Ordering = action.payload
+    },
   },
 })
 
@@ -92,6 +97,7 @@ export const {
   fetchLiveIfoStart,
   fetchLiveIfoSuccess,
   fetchTags,
+  fetchOrdering,
 } = statsSlice.actions
 
 // Thunks
@@ -149,6 +155,11 @@ export const fetchLiveIfoStatus = () => async (dispatch) => {
 export const fetchLiveTags = () => async (dispatch) => {
   const tags = await fetchTagsFromApi()
   dispatch(fetchTags(tags))
+}
+
+export const fetchLiveOrdering = () => async (dispatch) => {
+  const ordering = await fetchOrderingFromApi()
+  dispatch(fetchOrdering(ordering))
 }
 
 export default statsSlice.reducer

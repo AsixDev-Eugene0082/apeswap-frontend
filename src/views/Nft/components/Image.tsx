@@ -8,6 +8,7 @@ interface ImageProps {
   rarityTier: number
   borderRadius?: string
   hideTier?: boolean
+  imageBorderRadius?: boolean
 }
 
 interface ContainerProps {
@@ -28,7 +29,7 @@ const sway = keyframes`
     }
 `
 
-const StyledImage = styled.img`
+const StyledImage = styled.img<{ imageBorderRadius: boolean }>`
   position: absolute;
   width: 100%;
   top: 0;
@@ -36,7 +37,7 @@ const StyledImage = styled.img`
   transition: opacity 1s linear;
   height: 100%;
   object-fit: cover;
-  border-radius: 32px 32px 0 0;
+  border-radius: ${(props) => (props.imageBorderRadius ? '32px 32px 0 0' : 0)};
 `
 
 const Container = styled.div<ContainerProps>`
@@ -62,7 +63,7 @@ const TierNumber = styled.p`
   font-weight: 800;
 `
 
-const Image: React.FC<ImageProps> = ({ src, alt, rarityTier, borderRadius, hideTier }) => {
+const Image: React.FC<ImageProps> = ({ src, alt, rarityTier, borderRadius, hideTier, imageBorderRadius }) => {
   let gradientStyle = ''
   let backgroundSize = ''
   if (rarityTier === 1) {
@@ -93,7 +94,7 @@ const Image: React.FC<ImageProps> = ({ src, alt, rarityTier, borderRadius, hideT
           <TierNumber>{rarityTier}</TierNumber>
         </TierSvg>
       )}
-      {src && <StyledImage src={src} alt={alt} />}
+      {src && <StyledImage src={src} alt={alt} imageBorderRadius={imageBorderRadius} />}
     </Container>
   )
 }

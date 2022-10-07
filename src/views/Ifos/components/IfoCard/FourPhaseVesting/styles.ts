@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { Button, Text } from '@apeswapfinance/uikit'
+import { Toggle } from '@ape.swap/uikit'
 
 export const Container = styled.div`
   background-color: ${({ theme }) => theme.colors.white3};
@@ -70,4 +71,9 @@ export const Wrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+`
+
+export const StyledToggle = styled(Toggle)`
+  border: 1px solid;
+  border-color: ${({ theme }) => theme.colors.white2};
 `

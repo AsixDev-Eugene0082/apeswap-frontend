@@ -1,15 +1,15 @@
 /** @jsxImportSource theme-ui */
 import React from 'react'
-import { IconButton, Text, Flex, TagVariants } from '@ape.swap/uikit'
+import { IconButton, Text, Flex, TagVariants, Button } from '@ape.swap/uikit'
 import { Box } from 'theme-ui'
 import BigNumber from 'bignumber.js'
 import ListView from 'components/ListView'
 import { ExtendedListViewProps } from 'components/ListView/types'
 import ListViewContent from 'components/ListViewContent'
 import { BASE_ADD_LIQUIDITY_URL } from 'config'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useHistory } from 'react-router-dom'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
-import ApyButton from 'components/ApyCalculator/ApyButton'
+import CalcButton from 'components/RoiCalculator/CalcButton'
 import useIsMobile from 'hooks/useIsMobile'
 import { Pool, Tag } from 'state/types'
 import { getBalanceNumber } from 'utils/formatBalance'
@@ -18,7 +18,7 @@ import { useTranslation } from 'contexts/Localization'
 import Actions from './Actions'
 import HarvestAction from './Actions/HarvestAction'
 import InfoContent from '../InfoContent'
-import { Container, StyledButton, ActionContainer, StyledTag } from './styles'
+import { StyledTag, poolStyles } from './styles'
 
 const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }> = ({ pools, openId, poolTags }) => {
   const { chainId } = useActiveWeb3React()
@@ -26,15 +26,16 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
   const { pathname } = useLocation()
   const { t } = useTranslation()
   const isActive = !pathname.includes('history')
+  const history = useHistory()
 
   const poolsListView = pools.map((pool) => {
     const token1 = pool?.stakingToken?.symbol
     const token2 = pool?.rewardToken?.symbol
     const totalDollarAmountStaked = Math.round(getBalanceNumber(pool?.totalStaked) * pool?.stakingToken?.price)
     const liquidityUrl = !pool?.lpStaking
-      ? pool.stakingToken.symbol === 'GNANA'
+      ? pool?.stakingToken?.symbol === 'GNANA'
         ? 'https://apeswap.finance/gnana'
-        : `https://apeswap.finance/swap?outputCurrency=${pool?.stakingToken.address[chainId]}`
+        : `https://apeswap.finance/swap?outputCurrency=${pool?.stakingToken?.address[chainId]}`
       : `${BASE_ADD_LIQUIDITY_URL}/${pool?.lpTokens?.token?.address[chainId]}/${pool?.lpTokens?.quoteToken?.address[chainId]}`
     const userAllowance = pool?.userData?.allowance
     const userEarnings = getBalanceNumber(
@@ -49,6 +50,11 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
 
     const pTag = poolTags?.find((tag) => tag.pid === pool.sousId)
     const tagColor = pTag?.color as TagVariants
+
+    const openLiquidityUrl = () =>
+      pool?.stakingToken?.symbol === 'GNANA'
+        ? history.push({ search: '?modal=gnana' })
+        : window.open(liquidityUrl, '_blank')
 
     // Token symbol logic is here temporarily for nfty
     return {
@@ -67,7 +73,10 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
       title: <Text bold>{pool?.rewardToken?.symbol || pool?.tokenName}</Text>,
       id: pool.sousId,
       infoContent: <InfoContent pool={pool} />,
-      infoContentPosition: 'translate(-82%, 28%)',
+      infoContentPosition: 'translate(8%, 0%)',
+      ttWidth: '250px',
+      toolTipIconWidth: isMobile && '20px',
+      toolTipStyle: isMobile && { marginTop: '5px', marginRight: '10px' },
       open: openId === pool.sousId,
       cardContent: (
         <>
@@ -90,14 +99,14 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
             height={50}
             toolTip={t('APRs are calculated based on current value of the token, reward rate, and share of pool.')}
             toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0, 60%)"
+            toolTipTransform="translate(10%, 0%)"
             aprCalculator={
-              <ApyButton
-                lpLabel={pool?.stakingToken?.symbol}
+              <CalcButton
+                label={pool?.stakingToken?.symbol}
                 rewardTokenName={pool?.rewardToken?.symbol}
                 rewardTokenPrice={pool?.rewardToken?.price}
-                apy={pool?.apr / 100}
-                addLiquidityUrl={liquidityUrl}
+                apr={pool?.apr}
+                tokenAddress={pool.stakingToken.address[chainId]}
               />
             }
           />
@@ -107,15 +116,15 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
             width={isMobile ? 160 : 110}
             height={50}
             toolTip={t('The total value of the tokens currently staked in this pool.')}
-            toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0%, 75%)"
+            toolTipPlacement="bottomRight"
+            toolTipTransform="translate(13%, 0%)"
           />
           <ListViewContent title={t('Earned')} value={userEarningsUsd} height={50} width={isMobile ? 80 : 150} />
         </>
       ),
       expandedContent: (
         <>
-          <ActionContainer>
+          <Flex sx={poolStyles.actionContainer}>
             {isMobile && (
               <ListViewContent
                 title={`${t('Available')} ${pool?.stakingToken?.symbol}`}
@@ -128,11 +137,9 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
                 ml={10}
               />
             )}
-            <a href={liquidityUrl} target="_blank" rel="noopener noreferrer">
-              <StyledButton sx={{ width: '150px' }}>
-                {t('GET')} {pool?.stakingToken?.symbol}
-              </StyledButton>
-            </a>
+            <Button variant="primary" sx={poolStyles.styledBtn} onClick={openLiquidityUrl}>
+              {t('GET')} {pool?.stakingToken?.symbol}
+            </Button>
             {!isMobile && (
               <ListViewContent
                 title={`${t('Available')} ${pool?.stakingToken?.symbol}`}
@@ -145,7 +152,7 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
                 ml={10}
               />
             )}
-          </ActionContainer>
+          </Flex>
           {!isMobile && <NextArrow />}
           <Actions
             allowance={userAllowance?.toString()}
@@ -154,6 +161,7 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
             stakingTokenBalance={pool?.userData?.stakingTokenBalance?.toString()}
             stakeTokenAddress={pool?.stakingToken?.address[chainId]}
             stakeTokenValueUsd={pool?.stakingToken?.price}
+            earnTokenSymbol={pool?.rewardToken?.symbol || pool?.tokenName}
             sousId={pool?.sousId}
           />
           {!isMobile && <NextArrow />}
@@ -168,9 +176,9 @@ const DisplayPools: React.FC<{ pools: Pool[]; openId?: number; poolTags: Tag[] }
     } as ExtendedListViewProps
   })
   return (
-    <Container>
+    <Flex sx={poolStyles.container}>
       <ListView listViews={poolsListView} />
-    </Container>
+    </Flex>
   )
 }
 

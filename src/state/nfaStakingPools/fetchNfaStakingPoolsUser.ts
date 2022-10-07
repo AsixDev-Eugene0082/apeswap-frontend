@@ -1,11 +1,11 @@
-import nfaStakingPools from 'config/constants/nfaStakingPools'
 import nfaStakingPoolsAbi from 'config/abi/nfaStaking.json'
 import nfaAbi from 'config/abi/nonFungibleApes.json'
 import { getNonFungibleApesAddress } from 'utils/addressHelper'
 import multicall from 'utils/multicall'
 import BigNumber from 'bignumber.js'
+import { NfaStakingPoolConfig } from 'config/constants/types'
 
-export const fetchPoolsAllowance = async (chainId, account) => {
+export const fetchPoolsAllowance = async (chainId, account, nfaStakingPools: NfaStakingPoolConfig[]) => {
   const nfaAddress = getNonFungibleApesAddress(chainId)
   const calls = nfaStakingPools.map((p) => ({
     address: nfaAddress,
@@ -17,7 +17,7 @@ export const fetchPoolsAllowance = async (chainId, account) => {
   return nfaStakingPools.reduce((acc, pool, index) => ({ ...acc, [pool.sousId]: allowances[index][0] }), {})
 }
 
-export const fetchUserBalances = async (chainId, account) => {
+export const fetchUserBalances = async (chainId, account, nfaStakingPools: NfaStakingPoolConfig[]) => {
   const nfaAddress = getNonFungibleApesAddress(chainId)
   const calls = nfaStakingPools.map(() => ({
     address: nfaAddress,
@@ -32,7 +32,7 @@ export const fetchUserBalances = async (chainId, account) => {
   return { ...tokenBalances }
 }
 
-export const fetchUserStakeBalances = async (chainId, account) => {
+export const fetchUserStakeBalances = async (chainId, account, nfaStakingPools: NfaStakingPoolConfig[]) => {
   const calls = nfaStakingPools.map((p) => ({
     address: p.contractAddress[chainId],
     name: 'userInfo',
@@ -50,7 +50,7 @@ export const fetchUserStakeBalances = async (chainId, account) => {
   return { ...stakedBalances }
 }
 
-export const fetchUserPendingRewards = async (chainId, account) => {
+export const fetchUserPendingRewards = async (chainId, account, nfaStakingPools: NfaStakingPoolConfig[]) => {
   const calls = nfaStakingPools.map((p) => ({
     address: p.contractAddress[chainId],
     name: 'pendingReward',
@@ -68,7 +68,7 @@ export const fetchUserPendingRewards = async (chainId, account) => {
   return { ...pendingRewards }
 }
 
-export const fetchUserStakedNfas = async (chainId, account) => {
+export const fetchUserStakedNfas = async (chainId, account, nfaStakingPools: NfaStakingPoolConfig[]) => {
   const calls = nfaStakingPools.map((p) => ({
     address: p.contractAddress[chainId],
     name: 'stakedNfts',

@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import React, { useEffect, useState } from 'react'
-import { JSBI, Pair, Percent } from '@apeswapfinance/sdk'
+import { JSBI, Pair, Percent } from '@ape.swap/sdk'
 import { Text, Card, Flex, CardProps, Button, Svg } from '@ape.swap/uikit'
 import { Link } from 'react-router-dom'
 import { Box, Divider } from 'theme-ui'

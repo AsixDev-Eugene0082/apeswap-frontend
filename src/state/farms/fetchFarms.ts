@@ -1,8 +1,7 @@
-import { farmsConfig } from 'config/constants'
 import erc20 from 'config/abi/erc20.json'
 import masterchefABI from 'config/abi/masterchef.json'
 import BigNumber from 'bignumber.js'
-import { FarmLpAprsType, LpTokenPrices } from 'state/types'
+import { Farm, FarmLpAprsType, LpTokenPrices } from 'state/types'
 import { chunk } from 'lodash'
 import multicall from 'utils/multicall'
 import fetchFarmCalls from './fetchFarmCalls'
@@ -13,6 +12,7 @@ const fetchFarms = async (
   lpPrices: LpTokenPrices[],
   bananaPrice: BigNumber,
   farmLpAprs: FarmLpAprsType,
+  farmsConfig: Farm[],
 ) => {
   const farmIds = []
   const farmCalls = farmsConfig.flatMap((farm) => {
@@ -22,7 +22,7 @@ const fetchFarms = async (
   const vals = await multicall(chainId, [...masterchefABI, ...erc20], farmCalls)
   const chunkSize = farmCalls.length / farmsConfig.length
   const chunkedFarms = chunk(vals, chunkSize)
-  return cleanFarmData(farmIds, chunkedFarms, lpPrices, bananaPrice, farmLpAprs)
+  return cleanFarmData(farmIds, chunkedFarms, lpPrices, bananaPrice, farmLpAprs, farmsConfig)
 }
 
 export default fetchFarms

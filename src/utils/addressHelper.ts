@@ -1,5 +1,6 @@
+import { SmartRouter } from '@ape.swap/sdk'
+import { SMART_PRICE_GETTERS } from 'config/constants/chains'
 import addresses from 'config/constants/contracts'
-import tokens from 'config/constants/tokens'
 
 export const getBananaAddress = (chainId: number) => {
   return addresses.banana[chainId]
@@ -49,6 +50,9 @@ export const getAuctionAddress = (chainId: number) => {
 export const getApePriceGetterAddress = (chainId: number) => {
   return addresses.apePriceGetter[chainId]
 }
+export const getSmartPriceGetter = (chainId: number, smartRouter?: SmartRouter) => {
+  return SMART_PRICE_GETTERS[chainId][smartRouter || SmartRouter.APE]
+}
 export const getVaultApeAddressV1 = (chainId: number) => {
   return addresses.vaultApeV1[chainId]
 }
@@ -69,9 +73,4 @@ export const getIazoSettingsAddress = (chainId: number) => {
 }
 export const getIazoFactoryAddress = (chainId: number) => {
   return addresses.iazoFactoryProxy[chainId]
-}
-export const getTokenSymbolFromAddress = (chainId: number, address: string) => {
-  return Object.keys(tokens).find((token) => {
-    return tokens[token].address[chainId] === address
-  })
 }

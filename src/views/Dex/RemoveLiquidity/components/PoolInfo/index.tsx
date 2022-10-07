@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import { Flex, Text } from '@ape.swap/uikit'
-import { CurrencyAmount, Pair, Percent, TokenAmount } from '@apeswapfinance/sdk'
+import { CurrencyAmount, Pair, Percent, TokenAmount } from '@ape.swap/sdk'
 import { CurrencyLogo } from 'components/Logo'
 import { useTranslation } from 'contexts/Localization'
 import useTotalSupply from 'hooks/useTotalSupply'

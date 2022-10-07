@@ -1,10 +1,10 @@
 /** @jsxImportSource theme-ui */
 import { Flex, Text } from '@ape.swap/uikit'
-import { Currency, Price } from '@apeswapfinance/sdk'
+import { Currency, Price } from '@ape.swap/sdk'
 import { useTranslation } from 'contexts/Localization'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import React, { useState } from 'react'
-import { Field } from 'state/swap/actions'
+import { Field } from 'state/orders/actions'
 import TradePrice from '../TradePrice'
 
 const OrderTradeInfo: React.FC<{

@@ -1,7 +1,7 @@
 /** @jsxImportSource theme-ui */
 import React, { useMemo } from 'react'
-import { Currency, Trade } from '@apeswapfinance/sdk'
-import { computeTradePriceBreakdown, warningSeverity } from 'utils/prices'
+import { Currency, Trade } from '@ape.swap/sdk'
+import { computeLegacyPriceBreakdown, warningSeverity } from 'utils/prices'
 import { useTranslation } from 'contexts/Localization'
 import { Button, Flex } from '@ape.swap/uikit'
 import { RouterTypeParams } from 'state/swap/actions'
@@ -30,7 +30,7 @@ export default function SwapModalFooter({
   realPriceValue: string
 }) {
   const { t } = useTranslation()
-  const { priceImpactWithoutFee } = useMemo(() => computeTradePriceBreakdown(trade), [trade])
+  const { priceImpactWithoutFee } = useMemo(() => computeLegacyPriceBreakdown(trade), [trade])
   const severity = warningSeverity(priceImpactWithoutFee)
 
   return (

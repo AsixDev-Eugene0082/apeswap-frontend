@@ -1,5 +1,5 @@
 import React from 'react'
-import { usePriceBnbBusd } from 'state/hooks'
+import { usePriceBnbBusd } from 'state/tokenPrices/hooks'
 import { SaleHistory } from 'hooks/api'
 import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'

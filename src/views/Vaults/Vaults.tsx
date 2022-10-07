@@ -10,14 +10,16 @@ import Banner from 'components/Banner'
 import ListViewLayout from 'components/layout/ListViewLayout'
 import partition from 'lodash/partition'
 import { useFetchFarmLpAprs } from 'state/hooks'
-import { useVaults, usePollVaultsData } from 'state/vaults/hooks'
+import { useVaults, usePollVaultsData, useSetVaults } from 'state/vaults/hooks'
 import { Vault } from 'state/types'
 import DisplayVaults from './components/DisplayVaults'
 import VaultMenu from './components/Menu'
+import { useSetZapOutputList } from 'state/zap/hooks'
 
 const NUMBER_OF_VAULTS_VISIBLE = 12
 
 const Vaults: React.FC = () => {
+  useSetVaults()
   usePollVaultsData()
   const { chainId } = useActiveWeb3React()
   useFetchFarmLpAprs(chainId)
@@ -127,6 +129,12 @@ const Vaults: React.FC = () => {
     }
     return sortVaults(chosenVaults).slice(0, numberOfVaultsVisible)
   }
+
+  useSetZapOutputList(
+    activeVaults?.slice(1).map((vault) => {
+      return { currencyIdA: vault?.token?.address[chainId], currencyIdB: vault?.quoteToken?.address[chainId] }
+    }),
+  )
 
   return (
     <>

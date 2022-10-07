@@ -1,7 +1,8 @@
 /** @jsxImportSource theme-ui */
-import { Flex } from '@ape.swap/uikit'
+import { useHistory } from 'react-router-dom'
+import { Flex, Button } from '@ape.swap/uikit'
 import useTheme from 'hooks/useTheme'
-import { Link, Text } from 'theme-ui'
+import { Text } from 'theme-ui'
 import useProgressiveImage from 'hooks/useProgressiveImage'
 import React from 'react'
 import { useTranslation } from 'contexts/Localization'
@@ -18,9 +19,13 @@ const Banner: React.FC<{
   titleColor?: ColorProps
   maxWidth?: number
 }> = ({ banner, children, title, listViewBreak, margin, titleColor, link, maxWidth = 1200 }) => {
+  const history = useHistory()
   const { isDark } = useTheme()
   const { t } = useTranslation()
-  const loaded = useProgressiveImage(`images/new-banners/${banner}-${isDark ? 'night' : 'day'}.svg`)
+  const loaded = useProgressiveImage(`../images/new-banners/${banner}-${isDark ? 'night' : 'day'}.svg`)
+
+  const openBannerLink = (bannerLink: string) =>
+    bannerLink.includes('modal') ? history.push({ search: bannerLink }) : window.open(bannerLink, '_blank')
 
   // Media breaks are used until tablet mode on list view is designed
   return (
@@ -43,14 +48,21 @@ const Banner: React.FC<{
         >
           {title.toUpperCase()}
         </Text>
-        <Link
-          sx={{ ...styles.learnText, color: titleColor || 'text', ':hover': { textDecoration: 'none' } }}
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Button
+          variant="text"
+          onClick={() => openBannerLink(link)}
+          sx={{
+            ...styles.learnText,
+            color: titleColor || 'text',
+
+            '&&&:hover': {
+              textDecoration: 'none',
+              color: titleColor || 'text',
+            },
+          }}
         >
           {t('Learn More')} <LearnMoreArrow color={titleColor || 'text'} />
-        </Link>
+        </Button>
       </Flex>
       {children}
     </Flex>

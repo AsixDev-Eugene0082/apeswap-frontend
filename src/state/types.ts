@@ -15,7 +15,10 @@ import {
   JungleFarmConfig,
   LiveIfo,
   BillsConfig,
+  Token,
 } from 'config/constants/types'
+import { ProtocolDashboardState } from './protocolDashboard/types'
+import { ApiResponse } from './statsPage/types'
 
 export type AppThunk<ReturnType = void> = ThunkAction<ReturnType, State, unknown, AnyAction>
 
@@ -110,6 +113,7 @@ export interface UserBill {
   truePricePaid: string
   lastBlockTimestamp: string
   pendingRewards: string
+  billNftAddress: string
   nftData?: UserBillNft
 }
 
@@ -306,6 +310,7 @@ export interface NewsCardType {
   CardLink: string
   StartTime: string
   EndTime: string
+  isModal: boolean
 }
 
 export interface FarmLpAprsType {
@@ -557,6 +562,10 @@ export interface TagsType {
   [key: string]: any
 }
 
+export interface OrderingType {
+  [key: string]: any
+}
+
 export interface StatsState {
   isInitialized: boolean
   isLoading: boolean
@@ -567,6 +576,7 @@ export interface StatsState {
   HomepageServiceStats: ServiceData[]
   FarmLpAprs: FarmLpAprsType
   Tags: TagsType
+  Ordering: OrderingType
   LiveIfo: LiveIfo[]
   data: Stats
 }
@@ -578,8 +588,11 @@ export interface AuctionsState {
 }
 
 export interface TokenPricesState {
+  isTokensInitialized: boolean
   isInitialized: boolean
   isLoading: boolean
+  tokens: Token[]
+  bananaPrice: string
   data: TokenPrices[]
 }
 export interface LpTokenPricesState {
@@ -641,4 +654,6 @@ export interface State {
   jungleFarms: JungleFarmsState
   bills: BillsState
   nfas: NfaState
+  protocolDashboard: ProtocolDashboardState
+  userStats: ApiResponse
 }

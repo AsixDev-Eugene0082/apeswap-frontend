@@ -16,6 +16,7 @@ interface CardActionProps {
   stakeTokenValueUsd: number
   stakeTokenAddress: string
   sousId: number
+  earnTokenSymbol: string
 }
 
 const Actions: React.FC<CardActionProps> = ({
@@ -26,6 +27,7 @@ const Actions: React.FC<CardActionProps> = ({
   stakeTokenValueUsd,
   stakeTokenAddress,
   sousId,
+  earnTokenSymbol,
 }) => {
   const { account } = useActiveWeb3React()
   const actionToRender = () => {
@@ -50,6 +52,7 @@ const Actions: React.FC<CardActionProps> = ({
         stakingTokenBalance={stakingTokenBalance}
         stakeTokenValueUsd={stakeTokenValueUsd}
         sousId={sousId}
+        earnTokenSymbol={earnTokenSymbol}
       />
     )
   }

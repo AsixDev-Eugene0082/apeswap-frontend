@@ -15,7 +15,7 @@ const StyledCardContent = styled.div`
   display: flex;
 `
 
-const CardContent = ({ imgSrc, children }) => {
+const CardContent: React.FC<{ imgSrc: string; children: React.ReactNode }> = ({ imgSrc, children }) => {
   return (
     <StyledCardContent>
       <Image src={imgSrc} alt="card icon" />

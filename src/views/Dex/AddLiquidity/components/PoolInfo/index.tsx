@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import { Flex, Text } from '@ape.swap/uikit'
-import { Currency, Percent, Price, TokenAmount } from '@apeswapfinance/sdk'
+import { Currency, Percent, Price, TokenAmount } from '@ape.swap/sdk'
 import { DoubleCurrencyLogo } from 'components/Logo'
 import { ONE_BIPS } from 'config/constants'
 import { useTranslation } from 'contexts/Localization'

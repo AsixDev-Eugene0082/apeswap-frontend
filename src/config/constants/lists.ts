@@ -1,50 +1,62 @@
-// used to mark unsupported tokens, these are hosted lists of unsupported tokens
-/**
- * @TODO add list from blockchain association
- */
+import { ChainId } from '@ape.swap/sdk'
+
 export const UNSUPPORTED_LIST_URLS: string[] = []
 
-// const YEARN_LIST = 'https://yearn.science/static/tokenlist.json'
-// const COMPOUND_LIST = 'https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json'
-// const UMA_LIST = 'https://umaproject.org/uma.tokenlist.json'
-// const NFTX_LIST = 'https://nftx.ethereumdb.com/v1/tokenlist/'
-// const AAVE_LIST = 'tokenlist.aave.eth'
-// const SYNTHETIX_LIST = 'synths.snx.eth'
-// const WRAPPED_LIST = 'wrapped.tokensoft.eth'
-// const SET_LIST = 'https://raw.githubusercontent.com/SetProtocol/uniswap-tokenlist/main/set.tokenlist.json'
-// const OPYN_LIST = 'https://raw.githubusercontent.com/opynfinance/opyn-tokenlist/master/opyn-v1.tokenlist.json'
-// const ROLL_LIST = 'https://app.tryroll.com/tokens.json'
-// const COINGECKO_LIST = 'https://tokens.coingecko.com/uniswap/all.json'
-// const CMC_ALL_LIST = 'defi.cmc.eth'
-// const CMC_STABLECOIN = 'stablecoin.cmc.eth'
-// const KLEROS_LIST = 't2crtokens.eth'
-// const GEMINI_LIST = 'https://www.gemini.com/uniswap/manifest.json'
-// const QUICK_SWAP = 'https://unpkg.com/quickswap-default-token-list@latest/build/quickswap-default.tokenlist.json'
-// const SUSHI_SWAP = 'https://unpkg.com/@sushiswap/default-token-list@latest/build/sushiswap-default.tokenlist.json'
-// const BUIDL = 'https://raw.githubusercontent.com/ApeSwapFinance/apeswap-token-lists/main/lists/buidl.json'
 const NFT_INDEX = 'https://raw.githubusercontent.com/ApeSwapFinance/apeswap-token-lists/main/lists/nftindex.json'
+const PANCAKE_EXTENDED = 'https://tokens.pancakeswap.finance/pancakeswap-extended.json'
+const PANCAKE_100 = 'https://tokens.pancakeswap.finance/pancakeswap-top-100.json'
+// const CMC_ALL_LIST = 'https://api.coinmarketcap.com/data-api/v3/uniswap/all.json'
+// const COINGECKO_LIST = 'https://tokens.coingecko.com/uniswap/all.json'
+// const UNI_LIST = 'https://tokens.uniswap.org'
+const QUICKSWAP = 'https://unpkg.com/quickswap-default-token-list@1.2.18/build/quickswap-default.tokenlist.json'
 
 // lower index == higher priority for token import
 export const DEFAULT_LIST_OF_LISTS: string[] = [
   NFT_INDEX,
-  /* YEARN_LIST,
-    COMPOUND_LIST,
-    AAVE_LIST,
-    SYNTHETIX_LIST,
-    UMA_LIST,
-    NFTX_LIST,
-    WRAPPED_LIST,
-    SET_LIST,
-    OPYN_LIST,
-    ROLL_LIST,
-    // COINGECKO_LIST,
-    CMC_ALL_LIST,
-    CMC_STABLECOIN,
-    KLEROS_LIST,
-    GEMINI_LIST,
-    QUICK_SWAP, */
+  QUICKSWAP,
+  PANCAKE_100,
+  // COINGECKO_LIST,
+  // CMC_ALL_LIST,
+  PANCAKE_EXTENDED,
   ...UNSUPPORTED_LIST_URLS, // need to load unsupported tokens as well
 ]
 
 // default lists to be 'active' aka searched across
 export const DEFAULT_ACTIVE_LIST_URLS: string[] = []
+
+interface ExtendedListType {
+  name: string
+  warning?: string
+  logo: string
+  chainId?: ChainId
+}
+
+// Original list name
+export const EXTENDED_LIST_DETAILS: Record<string, ExtendedListType> = {
+  'PancakeSwap Extended': {
+    name: 'BNB Top 300',
+    warning:
+      'The ApeSwap DEX is decentralized, meaning that anyone can create or add liquidity for a token. Not all tokens on this list have been reviewed by ApeSwap or passed our due diligence process. Some tokens on this list may present scam risks, including the loss of funds.',
+    logo: 'https://raw.githubusercontent.com/ApeSwapFinance/apeswap-token-lists/main/assets/WBNB.svg',
+    chainId: ChainId.BSC,
+  },
+  'Quickswap Token List': {
+    name: 'Polygon List',
+    warning:
+      'The ApeSwap DEX is decentralized, meaning that anyone can create or add liquidity for a token. Not all tokens on this list have been reviewed by ApeSwap or passed our due diligence process. Some tokens on this list may present scam risks, including the loss of funds.',
+    logo: 'https://raw.githubusercontent.com/ApeSwapFinance/apeswap-token-lists/main/assets/MATIC.svg',
+    chainId: ChainId.MATIC,
+  },
+  'PancakeSwap Top 100': {
+    name: 'BNB Top 100',
+    warning:
+      'The ApeSwap DEX is decentralized, meaning that anyone can create or add liquidity for a token. Not all tokens on this list have been reviewed by ApeSwap or passed our due diligence process. Some tokens on this list may present scam risks, including the loss of funds.',
+    logo: 'https://raw.githubusercontent.com/ApeSwapFinance/apeswap-token-lists/main/assets/WBNB.svg',
+    chainId: ChainId.BSC,
+  },
+  'LICO Index List': {
+    name: 'LICO Index List',
+    logo: 'https://raw.githubusercontent.com/ApeSwapFinance/apeswap-token-lists/main/assets/LICO.svg',
+    chainId: ChainId.BSC,
+  },
+}

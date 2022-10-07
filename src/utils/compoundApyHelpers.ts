@@ -30,6 +30,7 @@ export const tokenEarnedPerThousandDollarsCompounding = ({
   roundingDecimals = 2,
   compoundFrequency = 1,
   performanceFee = 0,
+  amountDollar = 1000,
 }) => {
   // Everything here is worked out relative to a year, with the asset compounding at the compoundFrequency rate. 1 = once per day
   const timesCompounded = 365 * compoundFrequency
@@ -44,8 +45,8 @@ export const tokenEarnedPerThousandDollarsCompounding = ({
   }
 
   const daysAsDecimalOfYear = numberOfDays / 365
-  // Calculate the starting TOKEN balance with a dollar balance of $1000.
-  const principal = 1000 / tokenPrice
+  // Calculate the starting TOKEN balance with a dollar balance of $1000 or the provided value.
+  const principal = amountDollar / tokenPrice
   // This is a translation of the typical mathematical compounding APY formula. Details here: https://www.calculatorsoup.com/calculators/financial/compound-interest-calculator.php
   const finalAmount = principal * (1 + aprAsDecimal / timesCompounded) ** (timesCompounded * daysAsDecimalOfYear)
   // To get the TOKEN amount earned, deduct the amount after compounding (finalAmount) from the starting TOKEN balance (principal)

@@ -2,7 +2,7 @@ import { Button, Input } from '@apeswapfinance/uikit'
 import styled from '@emotion/styled'
 
 export const GetLPButton = styled(Button)`
-  height: 50px;
+  height: 44px;
   width: 100%;
   border: 3px solid ${({ theme }) => theme.colors.yellow};
   color: ${({ theme }) => theme.colors.yellow};
@@ -10,40 +10,64 @@ export const GetLPButton = styled(Button)`
     border: 3px solid yellow;
   }
   @media screen and (min-width: 1180px) {
-    height: 69px;
-    width: auto;
+    margin: 0 20px;
   }
 `
 
 export const BuyButton = styled(Button)`
   width: 100%;
-  height: 50px;
+  height: 44px;
   font-weight: 700;
   @media screen and (min-width: 1180px) {
-    width: 170px;
-    height: 69px;
+    margin: 0 20px;
   }
 `
 
 export const StyledInput = styled(Input)`
-  height: 69px;
   width: 100%;
   border: none;
-  padding: 0px 80px 22.5px 67px;
-  font-size: 14px;
+  font-size: 22px;
   font-weight: 700;
-  @media screen and (min-width: 1180px) {
-    width: 230px;
-    height: 69px;
-    padding: 0px 71px 22.5px 67px;
-  }
 `
 
-export const MaxButton = styled(Button)`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 10px;
-  z-index: 1;
-  border-radius: 6px;
-`
+export const styles = {
+  buyContainer: {
+    width: '100%',
+    flexDirection: 'column',
+    '@media screen and (min-width: 1180px)': {
+      marginRight: '40px',
+    },
+  },
+  detailsContainer: {
+    width: '100%',
+    flexDirection: 'column-reverse',
+    '@media screen and (min-width: 1180px)': {
+      marginRight: '40px',
+      flexDirection: 'column',
+    },
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap-reverse',
+    '@media screen and (min-width: 1180px)': {
+      flexWrap: 'wrap',
+      flexDirection: 'row',
+    },
+  },
+  getLpContainer: {
+    width: '100%',
+    padding: '10px 0 0 0',
+    '@media screen and (min-width: 1180px)': {
+      width: '50%',
+      padding: '0 20px',
+    },
+  },
+  buyButtonContainer: {
+    width: '100%',
+    padding: '10px 0 0 0',
+    '@media screen and (min-width: 1180px)': {
+      width: '50%',
+      padding: '0 20px',
+    },
+  },
+}

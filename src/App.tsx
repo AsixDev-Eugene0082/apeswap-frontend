@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy, useCallback } from 'react'
+import { ChainId } from '@ape.swap/sdk'
 import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import useEagerConnect from 'hooks/useEagerConnect'
@@ -6,33 +7,37 @@ import { ResetCSS, ApeSwapTheme } from '@apeswapfinance/uikit'
 import { ScrollToTop } from '@ape.swap/uikit'
 import BigNumber from 'bignumber.js'
 import MarketingModalCheck from 'components/MarketingModalCheck'
-import { CHAIN_ID } from 'config/constants/chains'
-import {
-  useFetchTokenPrices,
-  useFetchProfile,
-  useUpdateNetwork,
-  useFetchLiveIfoStatus,
-  useFetchLiveTags,
-} from 'state/hooks'
+import { useFetchBananaPrice } from 'state/tokenPrices/hooks'
+import { useFetchProfile, useUpdateNetwork, useFetchLiveIfoStatus, useFetchLiveTagsAndOrdering } from 'state/hooks'
 import { usePollBlockNumber } from 'state/block/hooks'
+import { PageMeta } from 'components/layout/Page'
+import * as Sentry from '@sentry/react'
+import { BrowserTracing } from '@sentry/tracing'
 import GlobalStyle from './style/Global'
 import Menu from './components/Menu'
 import ToastListener from './components/ToastListener'
 import PageLoader from './components/PageLoader'
+import PoolFinder from './views/Dex/PoolFinder'
+import ResetScroll from './utils/resetScroll'
+// Most used routes get loaded directly
 import Pool from './views/Dex/Pool'
 import Swap from './views/Dex/Swap'
 import AddLiquidity from './views/Dex/AddLiquidity'
+import Zap from './views/Dex/Zap'
 import RemoveLiquidity from './views/Dex/RemoveLiquidity'
-import PoolFinder from './views/Dex/PoolFinder'
-import ResetScroll from './utils/resetScroll'
+import useCircularStaking from 'hooks/useCircularStaking'
+
+Sentry.init({
+  dsn: process.env.REACT_APP_SENTRY_DSN,
+  integrations: [new BrowserTracing()],
+  tracesSampleRate: 0.1,
+})
 
 declare module '@emotion/react' {
   export interface Theme extends ApeSwapTheme {}
 }
 
 // Route-based code splitting
-// Only pool is included in the main bundle because of it's the most visited page'
-const Home = lazy(() => import('./views/Home'))
 const Home = lazy(() => import('./views/Homepage'))
 const Farms = lazy(() => import('./views/Farms'))
 const Pools = lazy(() => import('./views/Pools'))
@@ -41,25 +46,22 @@ const Ifos = lazy(() => import('./views/Ifos'))
 const NotFound = lazy(() => import('./views/NotFound'))
 const DualFarms = lazy(() => import('./views/DualFarms'))
 const Nft = lazy(() => import('./views/Nft'))
+const BabRaffle = lazy(() => import('./views/BabRaffle'))
 const Nfa = lazy(() => import('./views/Nft/Nfa'))
 const ApeZone = lazy(() => import('./views/ApeZone'))
 const Stats = lazy(() => import('./views/Stats'))
 const Auction = lazy(() => import('./views/Auction'))
 const BurningGames = lazy(() => import('./views/BurningGames'))
-const Iazos = lazy(() => import('./views/Iazos'))
-const CreateIazo = lazy(() => import('./views/Iazos/components/CreateIazo'))
-const IazoPage = lazy(() => import('./views/Iazos/components/IazoPage'))
 const AdminPools = lazy(() => import('./views/AdminPools'))
 const Vaults = lazy(() => import('./views/Vaults'))
 const NfaStaking = lazy(() => import('./views/NfaStaking'))
 const Bills = lazy(() => import('./views/Bills'))
 const Orders = lazy(() => import('./views/Dex/Orders'))
-const Topup = lazy(() => import('./views/Topup'))
-const RedirectOldRemoveLiquidityPathStructure = lazy(() => import('./views/LegacyRemoveLiquidity/redirects'))
 const TermsOfUse = lazy(() => import('./views/LegalPages/TermsOfUse'))
 const PrivacyPolicy = lazy(() => import('./views/LegalPages/PrivacyPolicy'))
-
+const ProtocolDashboard = lazy(() => import('./views/ProtocolDashboard'))
 const redirectSwap = () => import('./views/Dex/Swap/redirects')
+
 const RedirectPathToSwapOnly = lazy(async () =>
   redirectSwap().then((r) => ({
     default: r.RedirectPathToSwapOnly,
@@ -95,29 +97,26 @@ BigNumber.config({
 })
 
 const App: React.FC = () => {
+  usePollBlockNumber()
   useUpdateNetwork()
   useEagerConnect()
-  useFetchTokenPrices()
-  usePollBlockNumber()
+  useFetchBananaPrice()
   useFetchProfile()
   useFetchLiveIfoStatus()
-  useFetchLiveTags()
+  useFetchLiveTagsAndOrdering()
+  // Hotfix for showModal. Update redux state and remove
+  useCircularStaking()
 
   const { account, chainId } = useActiveWeb3React()
   const [showScrollIcon, setShowScrollIcon] = useState(false)
-
-  // Set a state to show scroll to top
-  // on load of the page,
-  // if pathname matches the needed pathname
-  // set it to true and show
 
   const showScroll = useCallback(() => {
     if (window.location.pathname === '/') {
       setShowScrollIcon(false)
     } else if (
-      window.location.pathname === '/farms' ||
+      window.location.pathname === '/banana-farms' ||
       window.location.pathname === '/pools' ||
-      window.location.pathname === '/vaults' ||
+      window.location.pathname === '/maximizers' ||
       window.location.pathname === '/iazos'
     ) {
       setShowScrollIcon(true)
@@ -133,7 +132,7 @@ const App: React.FC = () => {
 
   const loadMenu = () => {
     // ETH routes
-    if (chainId === CHAIN_ID.ETH) {
+    if (chainId === ChainId.MAINNET) {
       return (
         <Menu>
           <Suspense fallback={<PageLoader />}>
@@ -145,14 +144,17 @@ const App: React.FC = () => {
               <Route path="/privacy">
                 <PrivacyPolicy />
               </Route>
+              <Route path="/protocol-dashboard">
+                <ProtocolDashboard />
+              </Route>
               {/* Redirects */}
               <Route path="/admin-pools">
                 <Redirect to="/" />
               </Route>
-              <Route path="/farms">
+              <Route path="/banana-farms">
                 <Redirect to="/" />
               </Route>
-              <Route path="/vaults">
+              <Route path="/maximizers">
                 <Redirect to="/" />
               </Route>
               <Route path="/treasury-bills">
@@ -186,30 +188,28 @@ const App: React.FC = () => {
                 <Redirect to="/" />
               </Route>
               <Route path="/stats">
-                <Redirect to="/" />
+                <Redirect to="/apestats" />
               </Route>
-              <Route exact path="/ss-iao">
-                <Redirect to="/" />
-              </Route>
-              <Route path="/ss-iao/create">
-                <Redirect to="/" />
-              </Route>
-              <Route path="/ss-iao/:id">
-                <Redirect to="/" />
+              <Route path="/apestats">
+                <Stats />
               </Route>
               {/* SWAP ROUTES */}
               <Route path="/swap" component={Swap} />
-              <Route exact strict path="/orders" component={RedirectPathToSwapOnly} />
+              <Route exact strict path="/limit-orders" component={RedirectPathToSwapOnly} />
               <Route exact strict path="/swap/:outputCurrency" component={RedirectToSwap} />
               <Route exact strict path="/send" component={RedirectPathToSwapOnly} />
               <Route exact strict path="/find" component={PoolFinder} />
-              <Route exact strict path="/pool" component={Pool} />
+              <Route exact strict path="/liquidity" component={Pool} />
               <Route exact strict path="/create" component={RedirectToAddLiquidity} />
-              <Route exact path="/add" component={AddLiquidity} />
               <Route exact path="/add/:currencyIdA" component={RedirectOldAddLiquidityPathStructure} />
-              <Route exact path="/add/:currencyIdA/:currencyIdB" component={RedirectDuplicateTokenIds} />
-              <Route exact strict path="/remove/:tokens" component={RedirectOldRemoveLiquidityPathStructure} />
+              <Route exact path="/add/:currencyIdA/:currencyIdB" component={RedirectDuplicateTokenIds} />{' '}
+              <Route exact path="/add-liquidity" component={AddLiquidity} />
+              <Route exact path="/add-liquidity/:currencyIdA" component={RedirectOldAddLiquidityPathStructure} />
+              <Route exact path="/add-liquidity/:currencyIdA/:currencyIdB" component={RedirectDuplicateTokenIds} />
               <Route exact strict path="/remove/:currencyIdA/:currencyIdB" component={RemoveLiquidity} />
+              <Route path="/zap">
+                <Redirect to={'/add-liquidity'} />
+              </Route>
               {/* SWAP ROUTES */}
               <Route component={NotFound} />
             </Switch>
@@ -219,7 +219,7 @@ const App: React.FC = () => {
     }
 
     // MATIC routes
-    if (chainId === CHAIN_ID.MATIC || chainId === CHAIN_ID.MATIC_TESTNET) {
+    if (chainId === ChainId.MATIC || chainId === ChainId.MATIC_TESTNET) {
       return (
         <Menu>
           <Suspense fallback={<PageLoader />}>
@@ -230,8 +230,14 @@ const App: React.FC = () => {
               <Route path="/admin-pools">
                 <AdminPools />
               </Route>
-              <Route path="/farms">
+              <Route path="/protocol-dashboard">
+                <ProtocolDashboard />
+              </Route>
+              <Route path="/banana-farms">
                 <DualFarms />
+              </Route>
+              <Route path="/apestats">
+                <Stats />
               </Route>
               <Route path="/terms">
                 <TermsOfUse />
@@ -244,7 +250,7 @@ const App: React.FC = () => {
                 <Redirect to="/" />
               </Route>
               <Route path="/treasury-bills">
-                <Redirect to="/" />
+                <Bills />
               </Route>
               <Route exact path="/nft">
                 <Redirect to="/" />
@@ -273,31 +279,23 @@ const App: React.FC = () => {
               <Route path="/gnana">
                 <Redirect to="/" />
               </Route>
-              <Route path="/stats">
-                <Redirect to="/" />
-              </Route>
-              <Route exact path="/ss-iao">
-                <Redirect to="/" />
-              </Route>
-              <Route path="/ss-iao/create">
-                <Redirect to="/" />
-              </Route>
-              <Route path="/ss-iao/:id">
-                <Redirect to="/" />
-              </Route>
               {/* SWAP ROUTES */}
               <Route path="/swap" component={Swap} />
-              <Route exact strict path="/orders" component={RedirectPathToSwapOnly} />
+              <Route exact strict path="/limit-orders" component={RedirectPathToSwapOnly} />
               <Route exact strict path="/swap/:outputCurrency" component={RedirectToSwap} />
               <Route exact strict path="/send" component={RedirectPathToSwapOnly} />
               <Route exact strict path="/find" component={PoolFinder} />
-              <Route exact strict path="/pool" component={Pool} />
+              <Route exact strict path="/liquidity" component={Pool} />
               <Route exact strict path="/create" component={RedirectToAddLiquidity} />
-              <Route exact path="/add" component={AddLiquidity} />
               <Route exact path="/add/:currencyIdA" component={RedirectOldAddLiquidityPathStructure} />
               <Route exact path="/add/:currencyIdA/:currencyIdB" component={RedirectDuplicateTokenIds} />
-              <Route exact strict path="/remove/:tokens" component={RedirectOldRemoveLiquidityPathStructure} />
+              <Route exact path="/add-liquidity" component={AddLiquidity} />
+              <Route exact path="/add-liquidity/:currencyIdA" component={RedirectOldAddLiquidityPathStructure} />
+              <Route exact path="/add-liquidity/:currencyIdA/:currencyIdB" component={RedirectDuplicateTokenIds} />
               <Route exact strict path="/remove/:currencyIdA/:currencyIdB" component={RemoveLiquidity} />
+              <Route exact path="/zap" component={Zap} />
+              <Route exact strict path="/zap/:currencyIdA" component={Zap} />
+              <Route exact strict path="/zap/:currencyIdA/:currencyIdB/:currencyIdC" component={Zap} />
               {/* SWAP ROUTES */}
               <Route component={NotFound} />
             </Switch>
@@ -313,17 +311,23 @@ const App: React.FC = () => {
             <Route exact path="/nft">
               <Nft />
             </Route>
+            <Route exact path="/bab-raffle">
+              <BabRaffle />
+            </Route>
             <Route path="/" exact component={Home} />
-            <Route path="/farms">
+            <Route path="/banana-farms">
               <Farms />
             </Route>
             <Route path="/pools">
               <Pools />
             </Route>
+            <Route path="/protocol-dashboard">
+              <ProtocolDashboard />
+            </Route>
             <Route path="/jungle-farms">
               <JungleFarms />
             </Route>
-            <Route path="/vaults">
+            <Route path="/maximizers">
               <Vaults />
             </Route>
             <Route path="/treasury-bills">
@@ -338,15 +342,6 @@ const App: React.FC = () => {
             <Route path="/auction">
               <Auction />
             </Route>
-            <Route exact path="/ss-iao">
-              <Iazos />
-            </Route>
-            <Route path="/ss-iao/create">
-              <CreateIazo />
-            </Route>
-            <Route path="/ss-iao/:id">
-              <IazoPage />
-            </Route>
             <Route exact path="/nft">
               <Nft />
             </Route>
@@ -359,7 +354,7 @@ const App: React.FC = () => {
             <Route path="/gnana">
               <ApeZone />
             </Route>
-            <Route path="/stats">
+            <Route path="/apestats">
               <Stats />
             </Route>
             <Route path="/burn">
@@ -383,17 +378,21 @@ const App: React.FC = () => {
             </Route>
             {/* SWAP ROUTES */}
             <Route path="/swap" component={Swap} />
-            <Route exact strict path="/orders" component={Orders} />
+            <Route exact strict path="/limit-orders" component={Orders} />
             <Route exact strict path="/swap/:outputCurrency" component={RedirectToSwap} />
             <Route exact strict path="/send" component={RedirectPathToSwapOnly} />
             <Route exact strict path="/find" component={PoolFinder} />
-            <Route exact strict path="/pool" component={Pool} />
+            <Route exact strict path="/liquidity" component={Pool} />
             <Route exact strict path="/create" component={RedirectToAddLiquidity} />
-            <Route exact path="/add" component={AddLiquidity} />
             <Route exact path="/add/:currencyIdA" component={RedirectOldAddLiquidityPathStructure} />
             <Route exact path="/add/:currencyIdA/:currencyIdB" component={RedirectDuplicateTokenIds} />
-            <Route exact strict path="/remove/:tokens" component={RedirectOldRemoveLiquidityPathStructure} />
+            <Route exact path="/add-liquidity" component={AddLiquidity} />
+            <Route exact path="/add-liquidity/:currencyIdA" component={RedirectOldAddLiquidityPathStructure} />
+            <Route exact path="/add-liquidity/:currencyIdA/:currencyIdB" component={RedirectDuplicateTokenIds} />
             <Route exact strict path="/remove/:currencyIdA/:currencyIdB" component={RemoveLiquidity} />
+            <Route exact path="/zap" component={Zap} />
+            <Route exact strict path="/zap/:currencyIdA" component={Zap} />
+            <Route exact strict path="/zap/:currencyIdA/:currencyIdB/:currencyIdC" component={Zap} />
             {/* SWAP ROUTES */}
             <Route component={NotFound} />
           </Switch>
@@ -404,6 +403,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
+      <PageMeta />
       <ResetScroll />
       <ResetCSS />
       <GlobalStyle />

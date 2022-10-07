@@ -1,6 +1,4 @@
-import React, { useState, useRef } from 'react'
-import Reward from 'react-rewards'
-import rewards from 'config/constants/rewards'
+import React, { useRef } from 'react'
 import useReward from 'hooks/useReward'
 import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
@@ -91,7 +89,6 @@ const StakeAction: React.FC<StakeActionsProps> = ({
 
   const rewardRefStake = useRef(null)
   const rewardRefUnstake = useRef(null)
-  const [typeOfReward, setTypeOfReward] = useState('rewardBanana')
   const earnings = new BigNumber(pool.userData?.pendingReward || 0)
   const isLoading = !pool.userData
 
@@ -110,9 +107,7 @@ const StakeAction: React.FC<StakeActionsProps> = ({
     <DepositModal
       max={stakingLimit && stakingTokenBalance.isGreaterThan(convertedLimit) ? convertedLimit : stakingTokenBalance}
       onConfirm={async (val) => {
-        setTypeOfReward('rewardBanana')
         await onStake(val).catch(() => {
-          setTypeOfReward('error')
           rewardRefStake.current?.rewardMe()
         })
       }}
@@ -125,9 +120,7 @@ const StakeAction: React.FC<StakeActionsProps> = ({
     <WithdrawModal
       max={stakedBalance}
       onConfirm={async (val) => {
-        setTypeOfReward('removed')
         await onUnstake(val).catch(() => {
-          setTypeOfReward('error')
           rewardRefUnstake.current?.rewardMe()
         })
       }}
@@ -149,16 +142,14 @@ const StakeAction: React.FC<StakeActionsProps> = ({
               />
             </HarvestWrapper>
           )}
-          <Reward ref={rewardRefUnstake} type="emoji" config={rewards[typeOfReward]}>
+          <>
             <StyledIconButton className="noClick" onClick={onPresentWithdraw} mr="6px">
               <MinusIcon className="noClick" color="white" width="12px" height="12px" />
             </StyledIconButton>
-          </Reward>
-          <Reward ref={rewardRefStake} type="emoji" config={rewards[typeOfReward]}>
             <StyledIconButton className="noClick" onClick={onPresentDeposit}>
               <AddIcon className="noClick" color="white" width="16px" height="16px" />
             </StyledIconButton>
-          </Reward>
+          </>
         </IconButtonWrapper>
       )
     )

@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
+import { ChainId } from '@ape.swap/sdk'
 import { Contract } from '@ethersproject/contracts'
 import { abi as IUniswapV2PairABI } from '@uniswap/v2-core/build/IUniswapV2Pair.json'
-import { jungleFarmsConfig, poolsConfig } from 'config/constants'
-import nfaStakingPools from 'config/constants/nfaStakingPools'
-import { CHAIN_ID } from 'config/constants/chains'
+import { useSelector } from 'react-redux'
+import { State } from 'state/types'
 import ifo from 'config/abi/ifo.json'
 import billAbi from 'config/abi/bill.json'
+import multicallV3 from 'config/abi/multicallv3.json'
 import billNftAbi from 'config/abi/billNft.json'
 import ifoLinear from 'config/abi/ifoLinear.json'
 import erc20 from 'config/abi/erc20.json'
@@ -22,6 +23,8 @@ import vaultApeV1 from 'config/abi/vaultApeV1.json'
 import vaultApeV2 from 'config/abi/vaultApeV2.json'
 import apePriceGetter from 'config/abi/apePriceGetter.json'
 import miniChef from 'config/abi/miniApeV2.json'
+import babToken from 'config/abi/babToken.json'
+import raffle from 'config/abi/raffle.json'
 import multi from 'config/abi/Multicall.json'
 import ensPublicResolver from 'config/abi/ens-public-resolver.json'
 import ens from 'config/abi/ens-registrar.json'
@@ -31,8 +34,7 @@ import iazoExposerAbi from 'config/abi/iazoExposer.json'
 import iazoSettingsAbi from 'config/abi/iazoSettings.json'
 import iazoFactoryAbi from 'config/abi/iazoFactory.json'
 import iazoAbi from 'config/abi/iazo.json'
-import { useSelector } from 'react-redux'
-import { State } from 'state/types'
+import zap from 'config/abi/zap.json'
 import {
   Treasury,
   IazoExposer,
@@ -60,10 +62,12 @@ import {
   VaultApeV1,
   VaultApeV2,
   JungleChef,
+  Multicallv3,
 } from 'config/abi/types'
 import {
   useApePriceGetterAddress,
   useAuctionAddress,
+  useBabTokenAddress,
   useBananaAddress,
   useBananaProfileAddress,
   useGoldenBananaAddress,
@@ -73,13 +77,17 @@ import {
   useMasterChefAddress,
   useMiniChefAddress,
   useMulticallAddress,
+  useMulticallV3Address,
   useNativeWrapCurrencyAddress,
   useNonFungibleApesAddress,
+  useRaffleAddress,
   useTreasuryAddress,
   useVaultApeAddressV1,
   useVaultApeAddressV2,
+  useZapAddress,
 } from './useAddress'
 import useActiveWeb3React from './useActiveWeb3React'
+import { Zap } from 'config/abi/types/Zap'
 
 export function useContract(abi: any, address: string | undefined, withSignerIfPossible = true): Contract | null {
   const { library, account } = useActiveWeb3React()
@@ -138,6 +146,7 @@ export const useMasterchef = () => {
 export const useSousChef = (id) => {
   // Using selector to avoid circular dependecies
   const chainId = useSelector((state: State) => state.network.data.chainId)
+  const poolsConfig = useSelector((state: State) => state.pools.data)
   const config = poolsConfig.find((pool) => pool.sousId === id)
 
   return useContract(sousChef, config.contractAddress[chainId]) as SousChef
@@ -145,12 +154,14 @@ export const useSousChef = (id) => {
 
 export const useJungleChef = (id) => {
   const chainId = useSelector((state: State) => state.network.data.chainId)
+  const jungleFarmsConfig = useSelector((state: State) => state.jungleFarms.data)
   const config = jungleFarmsConfig.find((pool) => pool.jungleId === id)
 
   return useContract(jungleChef, config.contractAddress[chainId]) as JungleChef
 }
 
 export const useNfaStakingChef = (id) => {
+  const nfaStakingPools = useSelector((state: State) => state.nfaStakingPools.data)
   const config = nfaStakingPools.find((pool) => pool.sousId === id)
   const rawAbi = nfaStakingAbi
   return useContract(rawAbi, config.contractAddress[process.env.REACT_APP_CHAIN_ID]) as NfaStaking
@@ -198,13 +209,23 @@ export const useBillNftContract = (address: string) => {
   return useContract(billNftAbi, address) as BillNft
 }
 
+export const useBabContract = () => {
+  // TODO: generate type
+  return useContract(babToken, useBabTokenAddress())
+}
+
+export const useRaffleContract = () => {
+  // TODO: generate type
+  return useContract(raffle, useRaffleAddress())
+}
+
 export function useENSRegistrarContract(withSignerIfPossible?: boolean): Contract | null {
   const { chainId } = useActiveWeb3React()
   let address: string | undefined
   if (chainId) {
     // eslint-disable-next-line default-case
     switch (chainId) {
-      case CHAIN_ID.ETH:
+      case ChainId.MAINNET:
         address = '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e'
         break
     }
@@ -230,6 +251,14 @@ export function useWETHContract(withSignerIfPossible?: boolean): Contract | null
 
 export function usePairContract(pairAddress?: string, withSignerIfPossible?: boolean): Contract | null {
   return useContract(IUniswapV2PairABI, pairAddress, withSignerIfPossible)
+}
+
+export function useInterfaceMulticall() {
+  return useContract(multicallV3, useMulticallV3Address(), false) as Multicallv3
+}
+
+export function useZapContract() {
+  return useContract(zap, useZapAddress()) as Zap
 }
 
 export default useContract

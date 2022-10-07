@@ -9,6 +9,7 @@ export const StyledCard = styled.div`
   margin-top: 20px;
 
   ${({ theme }) => theme.mediaQueries.sm} {
+    width: 50%;
     margin-top: 0px;
     background: transparent;
     box-shadow: none;
@@ -35,8 +36,10 @@ export const Header = styled(Heading)`
 `
 export const TokensDisplay = styled(Text)`
   font-size: 12px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.yellow};
+  font-weight: 600;
+  background: linear-gradient(53.53deg, #a16552 15.88%, #e1b242 92.56%);
+  background-clip: text;
+  text-fill-color: transparent;
   text-transform: uppercase;
 `
 export const ContentCard = styled.div`
@@ -63,14 +66,7 @@ export const StyledText = styled(Text)`
   z-index: 199;
   margin-left: 10px;
 `
-export const CheckBoxSection = styled.div`
-  display: none;
 
-  ${({ theme }) => theme.mediaQueries.sm} {
-    display: unset;
-    visibility: hidden;
-  }
-`
 export const CheckBoxCon = styled.div`
   display: flex;
   align-items: center;

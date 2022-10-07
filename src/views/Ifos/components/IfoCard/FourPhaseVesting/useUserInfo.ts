@@ -6,7 +6,7 @@ import multicall from 'utils/multicall'
 import { BSC_BLOCK_TIME } from 'config'
 import { Contract } from 'ethers'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
-import { useBlock } from 'state/block/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 
 export interface Props {
   address: string
@@ -19,7 +19,7 @@ export interface Props {
 }
 
 function useUserInfo(contract: Contract, tokenDecimals: number, address: string, refetch?: boolean) {
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const { fastRefresh } = useRefresh()
   const { account, chainId } = useActiveWeb3React()
 

@@ -37,7 +37,7 @@ const PoolMenu: React.FC<ListViewProps> = ({
         <Select size="sm" width="140px" onChange={(e) => onSetSortOption(e.target.value)} active={activeOption}>
           {OPTIONS.map((option) => {
             return (
-              <SelectItem size="sm" value={option.value}>
+              <SelectItem size="sm" value={option.value} key={option.label}>
                 <Text>{t(option.label)}</Text>
               </SelectItem>
             )
@@ -48,7 +48,7 @@ const PoolMenu: React.FC<ListViewProps> = ({
         <Select size="sm" width="126px" onChange={(e) => onSetTokenOption(e.target.value)} active={activeTokenOption}>
           {TOKEN_OPTIONS.map((option) => {
             return (
-              <SelectItem size="sm" value={option.value}>
+              <SelectItem size="sm" value={option.value} key={option.label}>
                 <Text>{t(option.label)}</Text>
               </SelectItem>
             )

@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import { bid } from 'utils/callHelpers'
-import { CHAIN_ID } from 'config/constants'
 import track from 'utils/track'
 import { useAuction } from './useContract'
 
@@ -13,7 +12,7 @@ const useBid = () => {
         const txHash = await bid(auctionContract, amount, id)
         track({
           event: 'nfa',
-          chain: CHAIN_ID,
+          chain: 56,
           data: {
             id,
             auctionId,

@@ -1,11 +1,18 @@
 import React from 'react'
-import styled from 'styled-components'
 import { Flex } from '@ape.swap/uikit'
+import styled from '@emotion/styled'
 import { useTranslation } from 'contexts/Localization'
 import { escapeRegExp } from '../../utils'
 
-const StyledInput = styled.input<{ error?: boolean; fontSize?: string; align?: string; removeLiquidity?: boolean }>`
+const StyledInput = styled.input<{
+  error?: boolean
+  fontSize?: string
+  align?: string
+  removeLiquidity?: boolean
+  disabledText?: boolean
+}>`
   color: ${({ error, theme }) => (error ? theme.colors.error : theme.colors.text)};
+  opacity: ${({ disabledText }) => disabledText && 0.4};
   display: inline-block;
   width: inherit;
   height: 100%;
@@ -55,6 +62,7 @@ export const Input = React.memo(function InnerInput({
   onUserInput,
   placeholder,
   removeLiquidity,
+  disabledText,
   ...rest
 }: {
   value: string | number
@@ -62,6 +70,7 @@ export const Input = React.memo(function InnerInput({
   removeLiquidity?: boolean
   error?: boolean
   fontSize?: string
+  disabledText?: boolean
   align?: 'right' | 'left'
 } & Omit<React.HTMLProps<HTMLInputElement>, 'ref' | 'onChange' | 'as'>) {
   const { t } = useTranslation()
@@ -96,6 +105,7 @@ export const Input = React.memo(function InnerInput({
         fontSize="22px"
         style={{ marginRight: removeLiquidity ? '0px' : '10px' }}
         removeLiquidity={removeLiquidity}
+        disabledText={disabledText}
       />
     </Flex>
   )

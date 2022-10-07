@@ -40,7 +40,7 @@ const BillMenu: React.FC<ListViewProps> = ({ onHandleQueryChange, onSetSortOptio
         <Select size="sm" width="126px" onChange={(e) => onSetSortOption(e.target.value)} active={activeOption}>
           {OPTIONS.map((option) => {
             return (
-              <SelectItem size="sm" value={option.value}>
+              <SelectItem size="sm" value={option.value} key={option.label}>
                 <Text>{t(option.label)}</Text>
               </SelectItem>
             )

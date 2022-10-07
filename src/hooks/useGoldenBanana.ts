@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { useTreasury } from 'hooks/useContract'
 import BigNumber from 'bignumber.js'
-import { CHAIN_ID } from 'config/constants'
 import track from 'utils/track'
 
 export const buy = async (contract, amount) => {
@@ -33,7 +32,7 @@ export const useSellGoldenBanana = () => {
         const txHash = await sell(treasuryContract, amount)
         track({
           event: 'gnana',
-          chain: CHAIN_ID,
+          chain: 56,
           data: {
             amount,
             cat: 'sell',
@@ -59,7 +58,7 @@ export const useBuyGoldenBanana = () => {
         const txHash = await buy(treasuryContract, amount)
         track({
           event: 'gnana',
-          chain: CHAIN_ID,
+          chain: 56,
           data: {
             amount,
             cat: 'buy',

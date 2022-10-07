@@ -2,7 +2,6 @@
 import React from 'react'
 import BigNumber from 'bignumber.js'
 import { useTranslation } from 'contexts/Localization'
-import { BLOCKS_PER_DAY } from 'config'
 import styled from '@emotion/styled'
 import { useWeb3React } from '@web3-react/core'
 import { NfaStakingPool } from 'state/types'
@@ -291,7 +290,7 @@ const CardHeading: React.FC<ExpandableSectionProps> = ({
   showExpandableSection,
 }) => {
   const { t } = useTranslation()
-  const { userData, tokenPerBlock, totalStaked } = pool
+  const { userData } = pool
   const stakingTokenBalance = new BigNumber(userData?.stakingTokenBalance || 0)
   const stakedBalance = new BigNumber(userData?.stakedBalance || 0)
   const accountHasStakedBalance = stakedBalance?.toNumber() > 0
@@ -303,7 +302,7 @@ const CardHeading: React.FC<ExpandableSectionProps> = ({
     : '?'
   const isLoading = !pool.userData
   const { account } = useWeb3React()
-  const bananaPerDay = BLOCKS_PER_DAY.times(new BigNumber(tokenPerBlock)).div(totalStaked).toFixed(3)
+  const bananaPerDay = 0
 
   const cardHeaderButton = () => {
     if (!account) {

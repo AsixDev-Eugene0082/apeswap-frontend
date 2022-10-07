@@ -1,7 +1,7 @@
 import React from 'react'
 import { Flex, Text, LinkExternal } from '@apeswapfinance/uikit'
 import { Pool } from 'state/types'
-import { useBlock } from 'state/block/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
 import getTimePeriods from 'utils/getTimePeriods'
 import { BSC_BLOCK_TIME } from 'config'
 import { BLOCK_EXPLORER } from 'config/constants/chains'
@@ -10,7 +10,7 @@ import { useTranslation } from 'contexts/Localization'
 
 const InfoContent: React.FC<{ pool: Pool }> = ({ pool }) => {
   const { chainId } = useActiveWeb3React()
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const { t } = useTranslation()
   const timeUntilStart = getTimePeriods(Math.max(pool?.startBlock - currentBlock, 0) * BSC_BLOCK_TIME, true)
   const timeUntilEnd = getTimePeriods(Math.max(pool?.endBlock - currentBlock, 0) * BSC_BLOCK_TIME, true)

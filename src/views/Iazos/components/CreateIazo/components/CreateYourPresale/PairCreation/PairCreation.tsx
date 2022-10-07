@@ -15,7 +15,7 @@ interface PairCreationProps {
 }
 
 const PairCreation: React.FC<PairCreationProps> = ({ onChange }) => {
-  const tokenList = ['WBNB', 'BUSD']
+  const tokenList = ['BNB', 'BUSD']
   const [selectedToken, setSelectedToken] = useState<ExtendedERC20Details>({
     userBalance: null,
     tokenSymbol: null,
@@ -47,7 +47,7 @@ const PairCreation: React.FC<PairCreationProps> = ({ onChange }) => {
             setLoadingTokenData(false)
           })
           .catch((error) => {
-            toastError(t('Something went wrong'))
+            toastError(t('LP Creation Error: Please try again.'))
             setTokenApproved(false)
             setLoadingTokenData(false)
             console.error(error)

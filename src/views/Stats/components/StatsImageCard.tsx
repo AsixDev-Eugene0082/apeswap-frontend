@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import { Image, useMatchBreakpoints } from '@apeswapfinance/uikit'
 
-interface StatsImageCard {
+interface StatsImageCardInterface {
   type: string
   image: string
   token0?: string
@@ -53,7 +53,7 @@ const StyledBackground = styled.div`
   background: rgb(255, 179, 0, 0.4);
 `
 
-const StatsImageCard: React.FC<StatsImageCard> = ({ type, image, token0, token1 }) => {
+const StatsImageCard: React.FC<StatsImageCardInterface> = ({ type, image, token0, token1 }) => {
   const { isXl: isDesktop } = useMatchBreakpoints()
 
   return (

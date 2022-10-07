@@ -1,13 +1,15 @@
+import { ChainId } from '@ape.swap/sdk'
 import BigNumber from 'bignumber.js'
-import { CHAIN_ID } from 'config/constants/chains'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import useRefresh from 'hooks/useRefresh'
 import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { useAppDispatch } from 'state'
-import { useFarmLpAprs, usePriceBananaBusd, useTokenPrices } from 'state/hooks'
+import { useFarmLpAprs } from 'state/hooks'
+import { useFetchLpTokenPrices } from 'state/lpPrices/hooks'
+import { useFetchTokenPrices, usePriceBananaBusd, useTokenPrices } from 'state/tokenPrices/hooks'
 import { DualFarm, State } from 'state/types'
-import { fetchDualFarmsPublicDataAsync, fetchDualFarmUserDataAsync } from '.'
+import { fetchDualFarmsPublicDataAsync, fetchDualFarmUserDataAsync, setInitialDualFarmDataAsync } from '.'
 
 export const usePollDualFarms = () => {
   const { chainId } = useActiveWeb3React()
@@ -19,7 +21,7 @@ export const usePollDualFarms = () => {
 
   useEffect(() => {
     const fetchFarms = () => {
-      if (chainId === CHAIN_ID.MATIC) {
+      if (chainId === ChainId.MATIC) {
         dispatch(fetchDualFarmsPublicDataAsync(chainId, tokenPrices, new BigNumber(bananaPrice), farmLpAprs))
       }
     }
@@ -31,12 +33,13 @@ export const useDualFarms = (account): DualFarm[] => {
   const { slowRefresh } = useRefresh()
   const dispatch = useAppDispatch()
   const { chainId } = useActiveWeb3React()
+  const farms = useSelector((state: State) => state.dualFarms.data)
+  const farmsLoaded = farms.length > 0
   useEffect(() => {
-    if (account && (chainId === CHAIN_ID.MATIC || chainId === CHAIN_ID.MATIC_TESTNET)) {
+    if (account && (chainId === ChainId.MATIC || chainId === ChainId.MATIC_TESTNET)) {
       dispatch(fetchDualFarmUserDataAsync(chainId, account))
     }
-  }, [account, dispatch, slowRefresh, chainId])
-  const farms = useSelector((state: State) => state.dualFarms.data)
+  }, [account, dispatch, slowRefresh, chainId, farmsLoaded])
   return farms
 }
 
@@ -62,5 +65,15 @@ export const useFarmUser = (pid) => {
     tokenBalance: farm?.userData ? new BigNumber(farm.userData.tokenBalance) : new BigNumber(0),
     stakedBalance: farm?.userData ? new BigNumber(farm.userData.stakedBalance) : new BigNumber(0),
     earnings: farm?.userData ? new BigNumber(farm.userData.rewarderEarnings) : new BigNumber(0),
+  }
+}
+
+export const useSetDualFarms = () => {
+  useFetchLpTokenPrices()
+  useFetchTokenPrices()
+  const dispatch = useAppDispatch()
+  const farms = useDualFarms(null)
+  if (farms.length === 0) {
+    dispatch(setInitialDualFarmDataAsync())
   }
 }

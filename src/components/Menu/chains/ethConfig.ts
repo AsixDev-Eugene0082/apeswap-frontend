@@ -1,30 +1,57 @@
+import { ChainId } from '@ape.swap/sdk'
 import { MenuEntry } from '@apeswapfinance/uikit'
-import { CHAIN_ID, NETWORK_INFO_LINK } from 'config/constants/chains'
-import { EXCHANGE } from '../constants'
+import { NETWORK_INFO_LINK } from 'config/constants/chains'
 import { ContextApi } from '../../../contexts/Localization/types'
 
 const maticConfig: (t: ContextApi['t']) => MenuEntry[] = (t) => [
-  EXCHANGE(t),
   {
-    label: t('More'),
+    label: t('Exchange'),
+    lightIcon: 'ExchangeLightImage',
+    darkIcon: 'ExchangeDarkImage',
+    items: [
+      {
+        label: t('Swap'),
+        href: '/swap',
+        isNew: false,
+      },
+      {
+        label: t('Liquidity'),
+        href: '/add-liquidity',
+        isNew: false,
+      },
+      {
+        label: t('Pro Trading'),
+        href: 'https://pro.apeswap.finance',
+        isNew: false,
+      },
+    ],
+  },
+  {
+    label: t('Explore'),
     lightIcon: 'MoreLightImage',
     darkIcon: 'MoreDarkImage',
     items: [
+      {
+        label: t('ApeStats'),
+        href: '/apestats',
+        isNew: false,
+      },
+      {
+        label: t('Dashboard'),
+        href: 'protocol-dashboard',
+        isNew: true,
+      },
       {
         label: t('Documentation'),
         href: 'https://apeswap.gitbook.io/apeswap-finance/',
       },
       {
         label: t('Charts'),
-        href: NETWORK_INFO_LINK[CHAIN_ID.ETH],
+        href: NETWORK_INFO_LINK[ChainId.MAINNET],
       },
       {
         label: t('Governance'),
-        href: 'https://vote.apeswap.finance',
-      },
-      {
-        label: t('Education'),
-        href: 'https://www.apelabs.education/',
+        href: 'https://discuss.apeswap.finance',
       },
     ],
   },

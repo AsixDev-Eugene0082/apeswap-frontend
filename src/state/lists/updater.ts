@@ -1,28 +1,23 @@
-import { useAllLists } from 'state/lists/hooks'
-import { getVersionUpgrade, VersionUpgrade } from '@uniswap/token-lists'
-import { useCallback, useEffect } from 'react'
-import { useDispatch } from 'react-redux'
-import { useAllInactiveTokens } from 'hooks/Tokens'
+import { getVersionUpgrade, minVersionBump, VersionUpgrade } from '@uniswap/token-lists'
 import { UNSUPPORTED_LIST_URLS } from 'config/constants/lists'
-import useWeb3Provider from 'hooks/useActiveWeb3React'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import useFetchListCallback from 'hooks/useFetchListCallback'
 import useInterval from 'hooks/useInterval'
-import useIsWindowVisible from 'hooks/useIsWindowVisible'
-import { AppDispatch } from '../index'
+import { useCallback, useEffect } from 'react'
+import { useAppDispatch } from 'state'
+import { useAllLists } from 'state/lists/hooks'
+import useIsWindowVisible from '../../hooks/useIsWindowVisible'
 import { acceptListUpdate } from './actions'
 import { useActiveListUrls } from './hooks'
 
 export default function Updater(): null {
-  const { library } = useWeb3Provider()
-  const dispatch = useDispatch<AppDispatch>()
+  const { library } = useActiveWeb3React()
+  const dispatch = useAppDispatch()
   const isWindowVisible = useIsWindowVisible()
 
   // get all loaded lists, and the active urls
   const lists = useAllLists()
   const activeListUrls = useActiveListUrls()
-
-  // initiate loading
-  useAllInactiveTokens()
 
   const fetchList = useFetchListCallback()
   const fetchAllListsCallback = useCallback(() => {
@@ -47,7 +42,7 @@ export default function Updater(): null {
 
   // if any lists from unsupported lists are loaded, check them too (in case new updates since last visit)
   useEffect(() => {
-    Object.keys(UNSUPPORTED_LIST_URLS).forEach((listUrl) => {
+    UNSUPPORTED_LIST_URLS.forEach((listUrl) => {
       const list = lists[listUrl]
       if (!list || (!list.current && !list.loadingRequestId && !list.error)) {
         fetchList(listUrl).catch((error) => console.debug('list added fetching error', error))
@@ -61,15 +56,28 @@ export default function Updater(): null {
       const list = lists[listUrl]
       if (list.current && list.pendingUpdate) {
         const bump = getVersionUpgrade(list.current.version, list.pendingUpdate.version)
-        // eslint-disable-next-line default-case
         switch (bump) {
           case VersionUpgrade.NONE:
             throw new Error('unexpected no version bump')
-          // update any active or inactive lists
           case VersionUpgrade.PATCH:
-          case VersionUpgrade.MINOR:
+          case VersionUpgrade.MINOR: {
+            const min = minVersionBump(list.current.tokens, list.pendingUpdate.tokens)
+            // automatically update minor/patch as long as bump matches the min update
+            if (bump >= min) {
+              dispatch(acceptListUpdate(listUrl))
+            } else {
+              console.error(
+                `List at url ${listUrl} could not automatically update because the version bump was only PATCH/MINOR while the update had breaking changes and should have been MAJOR`,
+              )
+            }
+            break
+          }
+          // update any active or inactive lists
           case VersionUpgrade.MAJOR:
             dispatch(acceptListUpdate(listUrl))
+            break
+          default:
+            break
         }
       }
     })

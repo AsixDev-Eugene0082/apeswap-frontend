@@ -1,7 +1,5 @@
 import React, { useState, useRef } from 'react'
 import styled from 'styled-components'
-import Reward from 'react-rewards'
-import rewards from 'config/constants/rewards'
 import { Button } from '@apeswapfinance/uikit'
 import BigNumber from 'bignumber.js'
 import useReward from 'hooks/useReward'
@@ -28,7 +26,6 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({ earnings, tokenDecimals
   const earningTokenBalance = getBalanceNumber(earnings, tokenDecimals)
   const rewardRef = useRef(null)
   const [pendingTx, setPendingTx] = useState(false)
-  const [typeOfReward, setTypeOfReward] = useState('rewardBanana')
   const onReward = useReward(rewardRef, useNfaStakingHarvest(sousId).onReward)
 
   const renderButton = () => {
@@ -37,9 +34,7 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({ earnings, tokenDecimals
         disabled={earningTokenBalance === 0 || pendingTx}
         onClick={async () => {
           setPendingTx(true)
-          setTypeOfReward('rewardBanana')
           await onReward().catch(() => {
-            setTypeOfReward('error')
             rewardRef.current?.rewardMe()
           })
           setPendingTx(false)
@@ -50,11 +45,7 @@ const HarvestActions: React.FC<HarvestActionsProps> = ({ earnings, tokenDecimals
     )
   }
 
-  return (
-    <Reward ref={rewardRef} type="emoji" config={rewards[typeOfReward]}>
-      {renderButton()}
-    </Reward>
-  )
+  return renderButton()
 }
 
 export default HarvestActions

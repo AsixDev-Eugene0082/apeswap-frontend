@@ -1,7 +1,7 @@
 /** @jsxImportSource theme-ui */
 import React, { useMemo } from 'react'
-import { Pair } from '@apeswapfinance/sdk'
-import { Text, Flex, AddIcon, Button, Spinner } from '@ape.swap/uikit'
+import { Pair } from '@ape.swap/sdk'
+import { Text, Flex, AddIcon, Button, Spinner, Svg } from '@ape.swap/uikit'
 import { Link } from 'react-router-dom'
 import UnlockButton from 'components/UnlockButton'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
@@ -88,16 +88,34 @@ export default function Pool() {
                 {t('Add liquidity to receive LP tokens')}
               </Text>
               {account ? (
-                <Button
-                  id="join-pool-button"
-                  as={Link}
-                  to="/add"
-                  startIcon={<AddIcon color="white" />}
-                  fullWidth
-                  mt="10px"
-                >
-                  {t('Add Liquidity')}
-                </Button>
+                <Flex sx={{ width: '100%' }}>
+                  <Button
+                    id="join-pool-button"
+                    as={Link}
+                    to="/add-liquidity"
+                    startIcon={<AddIcon color="white" />}
+                    m="10px"
+                    sx={{ width: '50%' }}
+                    size="sm"
+                  >
+                    {t('Add Liquidity')}
+                  </Button>
+                  <Button
+                    id="join-pool-button"
+                    as={Link}
+                    to="/zap"
+                    startIcon={
+                      <Flex sx={{ marginRight: '10px' }}>
+                        <Svg icon="ZapIcon" color="primaryBright" />
+                      </Flex>
+                    }
+                    m="10px"
+                    sx={{ width: '50%' }}
+                    size="sm"
+                  >
+                    {t('Zap Liquidity')}
+                  </Button>
+                </Flex>
               ) : (
                 <UnlockButton fullWidth mt="10px" />
               )}

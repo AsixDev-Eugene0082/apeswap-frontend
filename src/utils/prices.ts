@@ -1,4 +1,5 @@
-import { CurrencyAmount, Fraction, JSBI, Percent, Price, TokenAmount, Trade } from '@apeswapfinance/sdk'
+import { CurrencyAmount, Fraction, JSBI, Percent, Price, SmartRouter, TokenAmount, Trade, Zap } from '@ape.swap/sdk'
+import { SMART_LP_FEES } from 'config/constants/chains'
 import {
   BLOCKED_PRICE_IMPACT_NON_EXPERT,
   ALLOWED_PRICE_IMPACT_HIGH,
@@ -9,12 +10,19 @@ import {
 import { Field } from '../state/swap/actions'
 import { basisPointsToPercent } from './index'
 
-const BASE_FEE = new Percent(JSBI.BigInt(25), JSBI.BigInt(10000))
 const ONE_HUNDRED_PERCENT = new Percent(JSBI.BigInt(10000), JSBI.BigInt(10000))
-const INPUT_FRACTION_AFTER_FEE = ONE_HUNDRED_PERCENT.subtract(BASE_FEE)
+
+const getInputFractionAfterFee = (chainId: number, smartRouter: SmartRouter) => {
+  const baseFee = new Percent(JSBI.BigInt(SMART_LP_FEES[chainId][smartRouter]), JSBI.BigInt(10000))
+  return ONE_HUNDRED_PERCENT.subtract(baseFee)
+}
 
 // computes price breakdown for the trade
-export function computeTradePriceBreakdown(trade?: Trade | null): {
+export function computeTradePriceBreakdown(
+  chainId?: number,
+  smartRouter?: SmartRouter,
+  trade?: Trade | Zap | null,
+): {
   priceImpactWithoutFee: Percent | undefined
   realizedLPFee: CurrencyAmount | undefined | null
 } {
@@ -24,7 +32,45 @@ export function computeTradePriceBreakdown(trade?: Trade | null): {
     ? undefined
     : ONE_HUNDRED_PERCENT.subtract(
         trade.route.pairs.reduce<Fraction>(
-          (currentFee: Fraction): Fraction => currentFee.multiply(INPUT_FRACTION_AFTER_FEE),
+          (currentFee: Fraction): Fraction => currentFee.multiply(getInputFractionAfterFee(chainId, smartRouter)),
+          ONE_HUNDRED_PERCENT,
+        ),
+      )
+
+  // remove lp fees from price impact
+  const priceImpactWithoutFeeFraction = trade && realizedLPFee ? trade.priceImpact.subtract(realizedLPFee) : undefined
+
+  // the x*y=k impact
+  const priceImpactWithoutFeePercent = priceImpactWithoutFeeFraction
+    ? new Percent(priceImpactWithoutFeeFraction?.numerator, priceImpactWithoutFeeFraction?.denominator)
+    : undefined
+
+  // the amount of the input that accrues to LPs
+  const realizedLPFeeAmount =
+    realizedLPFee &&
+    trade &&
+    (trade.inputAmount instanceof TokenAmount
+      ? new TokenAmount(trade.inputAmount.token, realizedLPFee.multiply(trade.inputAmount.raw).quotient)
+      : CurrencyAmount.ether(realizedLPFee.multiply(trade.inputAmount.raw).quotient))
+
+  return { priceImpactWithoutFee: priceImpactWithoutFeePercent, realizedLPFee: realizedLPFeeAmount }
+}
+
+// computes price breakdown for the trade
+export function computeLegacyPriceBreakdown(trade?: Trade | null): {
+  priceImpactWithoutFee: Percent | undefined
+  realizedLPFee: CurrencyAmount | undefined | null
+} {
+  const baseFee = new Percent(JSBI.BigInt(20), JSBI.BigInt(10000))
+  const inputFractionAfterFee = ONE_HUNDRED_PERCENT.subtract(baseFee)
+
+  // for each hop in our trade, take away the x*y=k price impact from 0.3% fees
+  // e.g. for 3 tokens/2 hops: 1 - ((1 - .03) * (1-.03))
+  const realizedLPFee = !trade
+    ? undefined
+    : ONE_HUNDRED_PERCENT.subtract(
+        trade.route.pairs.reduce<Fraction>(
+          (currentFee: Fraction): Fraction => currentFee.multiply(inputFractionAfterFee),
           ONE_HUNDRED_PERCENT,
         ),
       )

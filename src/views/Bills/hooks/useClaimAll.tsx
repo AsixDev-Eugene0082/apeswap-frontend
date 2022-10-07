@@ -5,17 +5,20 @@ import { userClaimBill } from 'utils/callHelpers'
 import { getContract } from 'utils'
 import { Bill } from 'config/abi/types'
 import track from 'utils/track'
-import { getBillType } from './getBillType'
+import { useBillTypes } from './useBillType'
 
 // Claim a Bill
 const useClaimBill = (billMap: { billAddress: string; billIds: string[] }[]) => {
   const { account, library, chainId } = useActiveWeb3React()
+  const billAddresses = billMap.map((b) => {
+    return b.billAddress
+  })
+  const billTypes: string[] = useBillTypes(billAddresses)
   const handleClaimBill = useCallback(async () => {
-    const billTrxs = billMap.map(async (bm) => {
+    const billTrxs = billMap.map(async (bm, i) => {
       const billContract = getContract(bm.billAddress, billAbi, library, account) as Bill
-      const billType: string = getBillType(bm.billAddress, chainId)
       track({
-        event: billType,
+        event: billTypes[i],
         chain: chainId,
         data: {
           cat: 'claimAll',
@@ -27,7 +30,7 @@ const useClaimBill = (billMap: { billAddress: string; billIds: string[] }[]) => 
       return userClaimBill(billContract, bm.billIds)
     })
     return Promise.all(billTrxs)
-  }, [billMap, library, chainId, account])
+  }, [billMap, billTypes, library, chainId, account])
 
   return { onClaimBill: handleClaimBill }
 }

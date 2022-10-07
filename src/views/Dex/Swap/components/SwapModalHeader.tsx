@@ -1,10 +1,11 @@
 /** @jsxImportSource theme-ui */
 import React, { useMemo } from 'react'
-import { Trade, TradeType } from '@apeswapfinance/sdk'
+import { Trade, TradeType } from '@ape.swap/sdk'
 import { Text, ErrorIcon, Button, Flex, Svg } from '@ape.swap/uikit'
 import { computeTradePriceBreakdown, warningSeverity } from 'utils/prices'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { AutoColumn } from 'components/layout/Column'
+import { RouterTypeParams } from 'state/swap/actions'
 import { CurrencyLogo } from 'components/Logo'
 import { RowBetween, RowFixed } from 'components/layout/Row'
 import truncateHash from 'utils/truncateHash'
@@ -16,17 +17,22 @@ export default function SwapModalHeader({
   recipient,
   showAcceptChanges,
   onAcceptChanges,
+  bestRoute,
 }: {
   trade: Trade
   allowedSlippage: number
   recipient: string | null
   showAcceptChanges: boolean
+  bestRoute: RouterTypeParams
   onAcceptChanges: () => void
 }) {
   const { t } = useTranslation()
 
   const { chainId } = useActiveWeb3React()
-  const { priceImpactWithoutFee } = useMemo(() => computeTradePriceBreakdown(trade), [trade])
+  const { priceImpactWithoutFee } = useMemo(
+    () => computeTradePriceBreakdown(chainId, bestRoute.smartRouter, trade),
+    [trade, chainId, bestRoute],
+  )
   const priceImpactSeverity = warningSeverity(priceImpactWithoutFee)
 
   const truncatedRecipient = recipient ? truncateHash(recipient) : ''

@@ -8,6 +8,9 @@ import { hexStripZeros } from '@autonomylabs/limit-stop-orders/node_modules/@eth
 import { BigNumber } from 'ethers'
 import { useToast } from 'state/hooks'
 import { useTranslation } from 'contexts/Localization'
+import { replaceSwapState, SwapDelay } from 'state/swap/actions'
+import { RouterTypes } from 'config/constants'
+import { SmartRouter } from '@ape.swap/sdk'
 
 const useSwitchNetwork = () => {
   const { chainId, account, library, connector } = useWeb3React()
@@ -19,7 +22,7 @@ const useSwitchNetwork = () => {
   const switchNetwork = useCallback(
     async (userChainId: number) => {
       if (connector instanceof TorusConnector) {
-        toastError(t('Torus wallet is only available on BNB chain'))
+        toastError(t('Chain Select Error: Torus Wallet is only available on BNB Chain.'))
         return
       }
       if (account && userChainId !== chainId) {
@@ -30,6 +33,17 @@ const useSwitchNetwork = () => {
             params: [{ chainId: formattedChainId }],
           })
           dispatch(fetchChainIdFromUrl(false))
+          dispatch(
+            replaceSwapState({
+              typedValue: null,
+              field: null,
+              inputCurrencyId: null,
+              outputCurrencyId: null,
+              recipient: null,
+              swapDelay: SwapDelay.INIT,
+              bestRoute: { routerType: RouterTypes.APE, smartRouter: SmartRouter.APE },
+            }),
+          )
         } catch {
           // If the user doesn't have the chain add it
           await provider.request({
@@ -51,6 +65,18 @@ const useSwitchNetwork = () => {
       } else {
         dispatch(fetchUserNetwork(chainId, account, userChainId))
       }
+      // TODO: Better implementation. This is a hotfix to reset the swap state on network change to not send previous addresses to the wrong multicall state
+      dispatch(
+        replaceSwapState({
+          typedValue: null,
+          field: null,
+          inputCurrencyId: null,
+          outputCurrencyId: null,
+          recipient: null,
+          swapDelay: SwapDelay.INIT,
+          bestRoute: { routerType: RouterTypes.APE, smartRouter: SmartRouter.APE },
+        }),
+      )
     },
     [chainId, account, provider, dispatch, connector, t, toastError],
   )

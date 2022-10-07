@@ -1,14 +1,13 @@
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import useInterval from 'hooks/useInterval'
 import useIsWindowVisible from 'hooks/useIsWindowVisible'
-import { useSelector } from 'react-redux'
-import { useAppDispatch } from 'state'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { setBlock } from '.'
 import { State } from '../types'
 
 export const usePollBlockNumber = (refreshTime = 10000) => {
-  const dispatch = useAppDispatch()
+  const dispatch = useDispatch()
   const isWindowVisible = useIsWindowVisible()
   const { library } = useActiveWeb3React()
 

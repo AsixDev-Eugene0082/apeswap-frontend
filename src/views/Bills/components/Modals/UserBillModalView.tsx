@@ -1,5 +1,6 @@
 import React from 'react'
-import { Flex, Modal, Skeleton, Text, useModal } from '@apeswapfinance/uikit'
+import { Flex, Skeleton, Text } from '@apeswapfinance/uikit'
+import { Modal, useModal } from '@ape.swap/uikit'
 import ServiceTokenDisplay from 'components/ServiceTokenDisplay'
 import { Bills } from 'state/types'
 import { getBalanceNumber } from 'utils/formatBalance'
@@ -90,7 +91,7 @@ const BuyBillModalView: React.FC<BillModalProps> = ({ onDismiss, bill, billId })
               {attributes
                 ? attributes.map((attrib) => {
                     return (
-                      <GridTextValContainer>
+                      <GridTextValContainer key={attrib.value}>
                         <Text fontSize="12px">{attrib?.trait_type}</Text>
                         <Text fontSize="12px" bold>
                           {attrib?.value}
@@ -100,7 +101,7 @@ const BuyBillModalView: React.FC<BillModalProps> = ({ onDismiss, bill, billId })
                   })
                 : BILL_ATTRIBUTES.map((attrib) => {
                     return (
-                      <GridTextValContainer>
+                      <GridTextValContainer key={attrib}>
                         <Text fontSize="12px">{t(attrib)}</Text>
                         <Skeleton width="150px" />
                       </GridTextValContainer>

@@ -1,3 +1,4 @@
+import { SmartRouter } from '@ape.swap/sdk'
 import { createAction } from '@reduxjs/toolkit'
 import { RouterTypes } from 'config/constants'
 
@@ -7,11 +8,13 @@ export enum Field {
 }
 
 export enum SwapDelay {
-  INVALID = 'INVALID',
-  INPUT_DELAY = 'INPUT_DELAY',
-  INPUT_COMPLETE = 'INPUT_COMPLETE',
-  LOADING_ROUTE = 'LOADING_ROUTE',
-  VALID = 'VALID',
+  INIT = 'INIT', // The initial state of the swap cycle before a user interaction
+  USER_INPUT = 'USER_INPUT', // Swap state when a user is inputing a trade
+  USER_INPUT_COMPLETE = 'USER_INPUT_COMPLETE', // To let the app know when to start calculating swaps
+  FETCHING_SWAP = 'FETCHING_SWAP', // To not calculate swaps on every keystroke
+  SWAP_COMPLETE = 'SWAP_COMPLETE', // When the swap is ready to be displayed and fetch a bonus
+  FETCHING_BONUS = 'FETCHING_BONUS', // Checks if the swap has a valid bous route
+  SWAP_REFRESH = 'SWAP_REFRESH', // The last state that lets the app know to refresh routes to check for changes
 }
 
 type SearchSummary = {
@@ -38,6 +41,7 @@ export type DataResponse = {
 
 export interface RouterTypeParams {
   routerType: RouterTypes
+  smartRouter: SmartRouter
   bonusRouter?: DataResponse
 }
 

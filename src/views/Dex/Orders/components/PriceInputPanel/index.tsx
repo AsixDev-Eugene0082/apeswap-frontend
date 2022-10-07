@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import React from 'react'
-import { Currency } from '@apeswapfinance/sdk'
+import { Currency } from '@ape.swap/sdk'
 import { Text, Flex } from '@ape.swap/uikit'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { CurrencyLogo } from 'components/Logo'
@@ -79,7 +79,7 @@ const PriceInputPanel: React.FC<PriceInputPanelProps> = ({
           </span>{' '}
           {t('will be swapped for')}{' '}
           <span sx={{ fontWeight: 700 }}>
-            {value || '0'} {outputCurrency?.getSymbol(chainId)}
+            {(parseFloat(value) * parseFloat(inputValue)).toString() || '0'} {outputCurrency?.getSymbol(chainId)}
           </span>{' '}
         </Text>
       </Flex>

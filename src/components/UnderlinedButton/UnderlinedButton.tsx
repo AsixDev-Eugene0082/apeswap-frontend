@@ -12,7 +12,7 @@ const StyledButton = styled(Button)`
   text-transform: capitalize;
 `
 
-const UnderlinedButton = ({ text, handleClick }) => {
+const UnderlinedButton: React.FC<{ text: string; handleClick: () => void }> = ({ text, handleClick }) => {
   const { t } = useTranslation()
 
   return (

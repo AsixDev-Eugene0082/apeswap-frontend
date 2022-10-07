@@ -10,14 +10,12 @@ const QuestSlide4 = () => {
   return (
     <>
       <Box sx={styles.text}>
-        <Heading as="h5" color="yellow" style={{ fontSize: '12px' }}>
-          {t('Ready, steady, go').toUpperCase()}
-        </Heading>
-        <Heading sx={{ fontSize: '21px' }}>{t('Congratulations!')}</Heading>
+        <Heading sx={styles.first}>{t('Ready, steady, go').toUpperCase()}</Heading>
+        <Heading sx={styles.second}>{t('Congratulations!')}</Heading>
       </Box>
-      <Box sx={{ marginTop: '10px' }}>
-        <Text size="14px">{t('You are officialy ready to begin your')}</Text>{' '}
-        <Text color="yellow" size="14px">
+      <Box sx={styles.thirdWrapper}>
+        <Text sx={styles.third}>{t('You are officially ready to begin your')}</Text>{' '}
+        <Text color="yellow" sx={styles.third}>
           <a
             href="https://box.genki.io/RJ4LP3"
             style={{ textDecoration: 'underline' }}
@@ -27,7 +25,7 @@ const QuestSlide4 = () => {
             {t('DeFi journey')}
           </a>
         </Text>{' '}
-        <Text size="14px">{t('with ApeSwap. Good luck!')}</Text>
+        <Text sx={styles.third}>{t('with ApeSwap. Good luck!')}</Text>
       </Box>
     </>
   )

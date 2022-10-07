@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js'
-import { dualFarmsConfig } from 'config/constants'
-import { FarmLpAprsType, TokenPrices } from 'state/types'
+import { DualFarm, FarmLpAprsType, TokenPrices } from 'state/types'
 import { getDualFarmApr } from 'utils/apr'
 import { getRoi, tokenEarnedPerThousandDollarsCompounding } from 'utils/compoundApyHelpers'
 import { getBalanceNumber } from '../../utils/formatBalance'
@@ -12,9 +11,10 @@ const cleanDualFarmData = (
   bananaPrice: BigNumber,
   farmLpAprs: FarmLpAprsType,
   chainId: number,
+  dualFarms: DualFarm[],
 ) => {
   const data = chunkedFarms.map((chunk, index) => {
-    const dualFarmConfig = dualFarmsConfig?.find((farm) => farm.pid === farmIds[index])
+    const dualFarmConfig = dualFarms?.find((farm) => farm.pid === farmIds[index])
     const quoteToken = tokenPrices?.find(
       (token) => token.address[chainId] === dualFarmConfig.stakeTokens.token0.address[chainId],
     )

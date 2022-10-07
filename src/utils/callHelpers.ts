@@ -293,13 +293,9 @@ export const withdrawOfferTokensOnFailure = async (iazoContract: Iazo) => {
   })
 }
 
-export const userBuyBill = async (billContract: Bill, user: string, lpAmount: string, slippage: string) => {
+export const userBuyBill = async (billContract: Bill, user: string, lpAmount: string, maxPrice: string) => {
   return billContract
-    .deposit(
-      new BigNumber(lpAmount).times(new BigNumber(10).pow(18)).toString(),
-      new BigNumber(slippage).times(new BigNumber(10).pow(18)).toString(),
-      user,
-    )
+    .deposit(new BigNumber(lpAmount).times(new BigNumber(10).pow(18)).toString(), maxPrice, user)
     .then((trx) => {
       return trx.wait()
     })

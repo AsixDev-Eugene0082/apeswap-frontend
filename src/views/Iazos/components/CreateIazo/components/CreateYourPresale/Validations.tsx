@@ -230,7 +230,9 @@ const Validations: React.FC<ValidationProps> = ({ presaleData, settings, onValid
   return (
     <ValidationContainer>
       {aggregatedErrors.map((error) => (
-        <ValidationText boldContent={`${error.error}:  `}>{error.message}</ValidationText>
+        <ValidationText boldContent={`${error.error}:  `} key={error.message}>
+          {error.message}
+        </ValidationText>
       ))}
     </ValidationContainer>
   )

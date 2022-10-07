@@ -4,7 +4,6 @@ import { useDispatch } from 'react-redux'
 import { updateNfaStakingUserAllowance } from 'state/actions'
 import { approve } from 'utils/callHelpers'
 import track from 'utils/track'
-import { CHAIN_ID } from 'config/constants'
 import { updateDualFarmUserAllowances } from 'state/dualFarms'
 import useActiveWeb3React from './useActiveWeb3React'
 import { useAuctionAddress } from './useAddress'
@@ -25,7 +24,7 @@ export const useApprove = (lpContract) => {
     const trx = await approve(lpContract, masterChefContract)
     track({
       event: 'farm',
-      chain: CHAIN_ID,
+      chain: 56,
       data: {
         token: trx?.to,
         cat: 'enable',

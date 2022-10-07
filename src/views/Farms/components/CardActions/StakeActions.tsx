@@ -16,13 +16,15 @@ import useUnstake from 'hooks/useUnstake'
 import { useToast } from 'state/hooks'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/farms'
-import { getEtherscanLink } from 'utils'
+import { getEtherscanLink, showCircular } from 'utils'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useTranslation } from 'contexts/Localization'
 import ListViewContent from 'components/ListViewContent'
 import DepositModal from '../Modals/DepositModal'
 import WithdrawModal from '../Modals/WithdrawModal'
 import { ActionContainer, CenterContainer, SmallButton, StyledButton } from './styles'
+import { useHistory } from 'react-router-dom'
+import { useIsModalShown } from 'state/user/hooks'
 
 interface StakeActionsProps {
   stakingTokenBalance: string
@@ -45,6 +47,9 @@ const StakeAction: React.FC<StakeActionsProps> = ({ stakingTokenBalance, stakedB
   const isMobile = !isLg && !isXl && !isXxl
   const firstStake = !new BigNumber(stakedBalance)?.gt(0)
   const { t } = useTranslation()
+  const history = useHistory()
+  const { showGeneralHarvestModal } = useIsModalShown()
+  const displayGHCircular = () => showGeneralHarvestModal && showCircular(chainId, history, '?modal=circular-gh')
 
   const { onStake } = useStake(pid)
   const { onUnstake } = useUnstake(pid)
@@ -86,6 +91,7 @@ const StakeAction: React.FC<StakeActionsProps> = ({ stakingTokenBalance, stakedB
                 <Text> {t('View Transaction')} </Text>
               </LinkExternal>,
             )
+            if (trxHash) displayGHCircular()
           })
           .catch((e) => {
             console.error(e)

@@ -45,7 +45,7 @@ const BillCard: React.FC<{ bills: Bills[]; ml?: string }> = ({ bills, ml }) => {
                 justifyContent="space-between"
                 style={{ height: '75px', width: '100%' }}
               >
-                <ListViewContent title={t('Banana Bill')} value={bill.lpToken.symbol} height={50} width={120} />
+                <ListViewContent title={t(`${bill.billType}`)} value={bill.lpToken.symbol} height={50} width={130} />
                 <ListViewContent
                   title={t('Claimable')}
                   value={pendingRewards}

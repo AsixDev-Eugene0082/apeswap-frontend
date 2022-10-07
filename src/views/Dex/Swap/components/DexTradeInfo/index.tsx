@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import { Flex, HelpIcon, Svg, Text, TooltipBubble } from '@ape.swap/uikit'
-import { Trade } from '@apeswapfinance/sdk'
+import { Trade } from '@ape.swap/sdk'
 import { useTranslation } from 'contexts/Localization'
 import React, { useMemo, useState } from 'react'
 import { Divider } from 'theme-ui'
@@ -9,7 +9,7 @@ import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { RouterTypes } from 'config/constants'
 import { CHAIN_PARAMS } from 'config/constants/chains'
 import { dexStyles } from 'views/Dex/styles'
-import FormattedPriceImpact from 'views/LegacyOrders/components/FormattedPriceImpact'
+import FormattedPriceImpact from '../../../components/FormattedPriceImpact'
 import { AnimatePresence, motion } from 'framer-motion'
 import { computeTradePriceBreakdown, computeSlippageAdjustedAmounts } from 'utils/prices'
 import { styles } from './styles'
@@ -26,6 +26,7 @@ const DexTradeInfo: React.FC<{
   const { chainId } = useActiveWeb3React()
   const [showMore, setShowMore] = useState(open)
   const isBonusRouter = bestRoute.routerType === RouterTypes.BONUS
+  const isSmartRouter = bestRoute.routerType === RouterTypes.SMART
   const { t } = useTranslation()
   const [showInverted, setShowInverted] = useState(false)
   const route = trade?.route?.path?.map((val, i) => {
@@ -37,9 +38,12 @@ const DexTradeInfo: React.FC<{
     () => computeSlippageAdjustedAmounts(trade, allowedSlippage),
     [allowedSlippage, trade],
   )
-  const { priceImpactWithoutFee, realizedLPFee } = useMemo(() => computeTradePriceBreakdown(trade), [trade])
+  const { priceImpactWithoutFee, realizedLPFee } = useMemo(
+    () => computeTradePriceBreakdown(chainId, bestRoute.smartRouter, trade),
+    [trade, bestRoute, chainId],
+  )
 
-  return trade && swapDelay !== SwapDelay.INVALID ? (
+  return trade && swapDelay !== SwapDelay.INIT ? (
     <Flex sx={{ ...styles.dexTradeInfoContainer }}>
       <Flex
         sx={{ width: '100%', justifyContent: 'space-between', alignItems: 'center' }}
@@ -59,7 +63,7 @@ const DexTradeInfo: React.FC<{
               weight={700}
               sx={{ ...dexStyles.textWrap, lineHeight: isBonusRouter ? '10px' : '10px' }}
             >
-              {isBonusRouter ? t('Bonus Router') : t('ApeSwap Router')}
+              {isBonusRouter ? t('Bonus Router') : isSmartRouter ? t('Smart Router') : t('ApeSwap Router')}
             </Text>
           </Flex>
           <Svg icon="caret" direction={showMore ? 'up' : 'down'} />
@@ -119,7 +123,7 @@ const DexTradeInfo: React.FC<{
             >
               <Flex sx={{ justifyContent: 'space-between', margin: '4px 0px' }}>
                 <Text color={isBonusRouter ? 'primaryBright' : 'text'} size="12px" weight={700} sx={dexStyles.textWrap}>
-                  {isBonusRouter ? t('Bonus Router') : t('ApeSwap Router')}
+                  {isBonusRouter ? t('Bonus Router') : isSmartRouter ? t('Smart Router') : t('ApeSwap Router')}
                 </Text>
                 <Flex sx={{ alignSelf: 'flex-end' }}>
                   <TooltipBubble
@@ -128,6 +132,10 @@ const DexTradeInfo: React.FC<{
                         {isBonusRouter
                           ? t(
                               'The router used to upgrade transactions and return a swap bonus if the trade meets certain conditions.',
+                            )
+                          : isSmartRouter
+                          ? t(
+                              'The router used to facilitate transactions through other DEXs if ApeSwap’s DEX cannot fulfill them.',
                             )
                           : t('The native router that powers the majority of trades on the ApeSwap DEX.')}
                       </Text>

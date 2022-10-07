@@ -9,7 +9,7 @@ interface Context {
 
 export const SwiperContext = createContext<Context>(undefined)
 
-const SwiperProvider = ({ children }) => {
+const SwiperProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [swiper, setSwiper] = useState<SwiperCore>(null)
 
   const destroySwiper = () => {

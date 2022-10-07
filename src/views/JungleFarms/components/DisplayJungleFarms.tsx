@@ -1,4 +1,5 @@
-import { IconButton, Text, Flex } from '@ape.swap/uikit'
+import { IconButton, Text, Flex, TagVariants, Svg } from '@ape.swap/uikit'
+import { Box } from 'theme-ui'
 import BigNumber from 'bignumber.js'
 import ListView from 'components/ListView'
 import { ExtendedListViewProps } from 'components/ListView/types'
@@ -8,7 +9,7 @@ import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import ApyButton from 'components/ApyCalculator/ApyButton'
 import useIsMobile from 'hooks/useIsMobile'
 import React from 'react'
-import { JungleFarm } from 'state/types'
+import { JungleFarm, Tag } from 'state/types'
 import { getBalanceNumber } from 'utils/formatBalance'
 import { NextArrow } from 'views/Farms/components/styles'
 import { useTranslation } from 'contexts/Localization'
@@ -17,11 +18,17 @@ import Actions from './Actions'
 import HarvestAction from './Actions/HarvestAction'
 import InfoContent from '../InfoContent'
 import { Container, StyledButton, ActionContainer } from './styles'
-import { LiquidityModal } from '../../../components/LiquidityWidget'
-import { Field, selectCurrency } from '../../../state/swap/actions'
-import { useAppDispatch } from '../../../state'
+import { Field, selectCurrency } from 'state/swap/actions'
+import { useAppDispatch } from 'state'
+import { StyledTag } from '../../Pools/components/styles'
+import DualLiquidityModal from 'components/DualAddLiquidity/DualLiquidityModal'
+import { selectOutputCurrency } from 'state/zap/actions'
 
-const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number }> = ({ jungleFarms, openId }) => {
+const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number; jungleFarmTags: Tag[] }> = ({
+  jungleFarms,
+  openId,
+  jungleFarmTags,
+}) => {
   const { chainId } = useActiveWeb3React()
   const isMobile = useIsMobile()
   const { pathname } = useLocation()
@@ -29,18 +36,9 @@ const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number 
   const isActive = !pathname.includes('history')
   const dispatch = useAppDispatch()
 
-  // TODO: clean up this code
-  // Hack to get the close modal function from the provider
-  // Need to export ModalContext from uikit to clean up the code
-  const [, closeModal] = useModal(<></>)
-  const [onPresentAddLiquidityWidgetModal] = useModal(
-    <LiquidityModal handleClose={closeModal} />,
-    true,
-    true,
-    'liquidityWidgetModal',
-  )
+  const [onPresentAddLiquidityWidgetModal] = useModal(<DualLiquidityModal />, true, true, 'dualLiquidityModal')
 
-  const showLiquidity = (token, quoteToken) => {
+  const showLiquidity = (token, quoteToken, farm) => {
     dispatch(
       selectCurrency({
         field: Field.INPUT,
@@ -53,15 +51,19 @@ const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number 
         currencyId: quoteToken,
       }),
     )
+    dispatch(
+      selectOutputCurrency({
+        currency1: farm.lpTokens.token.address[chainId],
+        currency2: farm.lpTokens.quoteToken.address[chainId],
+      }),
+    )
     onPresentAddLiquidityWidgetModal()
   }
 
   const jungleFarmsListView = jungleFarms.map((farm) => {
     const [token1, token2] = farm.tokenName.split('-')
     const totalDollarAmountStaked = Math.round(getBalanceNumber(farm?.totalStaked) * farm?.stakingToken?.price)
-    const liquidityUrl = `https://apeswap.finance/add/${farm?.lpTokens?.token?.address[chainId]}/${
-      farm?.lpTokens?.quoteToken?.symbol === 'BNB' ? 'ETH' : farm?.lpTokens?.quoteToken?.address[chainId]
-    }`
+
     const userAllowance = farm?.userData?.allowance
     const userEarnings = getBalanceNumber(
       farm?.userData?.pendingReward || new BigNumber(0),
@@ -72,22 +74,34 @@ const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number 
     const userTokenBalanceUsd = `$${(
       getBalanceNumber(farm?.userData?.stakingTokenBalance || new BigNumber(0)) * farm?.stakingToken?.price
     ).toFixed(2)}`
+    const jTag = jungleFarmTags?.find((tag) => tag.pid === farm.jungleId)
+    const tagColor = jTag?.color as TagVariants
 
     return {
+      tag: (
+        <>
+          {jTag?.pid === farm.jungleId && (
+            <Box sx={{ marginRight: '5px', marginTop: ['0px', '2px'] }}>
+              <StyledTag key={jTag?.pid} variant={tagColor}>
+                {jTag?.text}
+              </StyledTag>
+            </Box>
+          )}
+        </>
+      ),
       tokens: {
         token1: token1 === 'LC' ? 'LC2' : token1,
         token2,
         token3: farm?.rewardToken?.symbol === 'LC' ? 'LC2' : farm?.rewardToken?.symbol,
       },
       stakeLp: true,
-      title: (
-        <Text ml={10} weight="bold">
-          {farm?.tokenName}
-        </Text>
-      ),
+      title: <Text bold>{farm?.tokenName}</Text>,
       id: farm.jungleId,
       infoContent: <InfoContent farm={farm} />,
-      infoContentPosition: 'translate(-82%, 28%)',
+      infoContentPosition: 'translate(8%, 0%)',
+      ttWidth: '250px',
+      toolTipIconWidth: isMobile && '20px',
+      toolTipStyle: isMobile && { marginTop: '10px', marginRight: '10px' },
       open: openId === farm.jungleId,
       cardContent: (
         <>
@@ -116,14 +130,13 @@ const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number 
               'APRs are calculated in real time. Note: APRs are provided for your convenience. APRs are constantly changing and do not represent guaranteed returns.',
             )}
             toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0, 38%)"
+            toolTipTransform="translate(8%, 0%)"
             aprCalculator={
               <ApyButton
-                lpLabel={farm?.stakingToken?.symbol}
                 rewardTokenName={farm?.rewardToken?.symbol}
                 rewardTokenPrice={farm?.rewardToken?.price}
                 apy={farm?.apr / 100}
-                addLiquidityUrl={liquidityUrl}
+                jungleFarm={farm}
               />
             }
           />
@@ -133,8 +146,8 @@ const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number 
             width={isMobile ? 160 : 110}
             height={50}
             toolTip={t('The total value of the LP tokens currently staked in this farm.')}
-            toolTipPlacement="bottomLeft"
-            toolTipTransform="translate(0, 75%)"
+            toolTipPlacement={(isMobile && 'bottomRight') || 'bottomLeft'}
+            toolTipTransform={(isMobile && 'translate(13%, 0%)') || 'translate(23%, 0%)'}
           />
           <ListViewContent title={t('Earned')} value={userEarningsUsd} height={50} width={isMobile ? 80 : 150} />
         </>
@@ -160,10 +173,11 @@ const DisplayJungleFarms: React.FC<{ jungleFarms: JungleFarm[]; openId?: number 
                 showLiquidity(
                   farm?.lpTokens?.token?.address[chainId],
                   farm?.lpTokens?.quoteToken?.symbol === 'BNB' ? 'ETH' : farm?.lpTokens?.quoteToken?.address[chainId],
+                  farm,
                 )
               }
             >
-              {t('GET LP')}
+              {t('GET LP')} <Svg icon="ZapIcon" color="primaryBright" />
             </StyledButton>
 
             {!isMobile && (

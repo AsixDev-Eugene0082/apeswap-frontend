@@ -28,7 +28,7 @@ const StyledPage = styled(Container)<SizeProps>`
   }
 `
 
-const PageMeta = () => {
+export const PageMeta = () => {
   const { pathname } = useLocation()
   const pageMeta = customMeta[pathname] || {}
   const { title, description, image } = { ...DEFAULT_META, ...pageMeta }
@@ -46,7 +46,6 @@ const PageMeta = () => {
 const Page: React.FC<SizeProps> = ({ children, ...props }) => {
   return (
     <>
-      <PageMeta />
       <StyledPage {...props}>{children}</StyledPage>
     </>
   )

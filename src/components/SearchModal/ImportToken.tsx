@@ -1,7 +1,9 @@
+/** @jsxImportSource theme-ui */
 import React, { useState } from 'react'
-import { Token, Currency } from '@apeswapfinance/sdk'
-import { Button, Text, ErrorIcon, Flex, Checkbox, Link, Tag } from '@apeswapfinance/uikit'
-import { AutoColumn } from 'components/layout/Column'
+import { Box } from 'theme-ui'
+import { Token, Currency } from '@ape.swap/sdk'
+import { Link, Tag } from '@apeswapfinance/uikit'
+import { Text, Flex, Button, Checkbox, ErrorIcon } from '@ape.swap/uikit'
 import { useAddUserToken } from 'state/user/hooks'
 import { getEtherscanLink } from 'utils'
 import truncateHash from 'utils/truncateHash'
@@ -9,6 +11,7 @@ import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useCombinedInactiveList } from 'state/lists/hooks'
 import { ListLogo } from 'components/Logo'
 import { useTranslation } from 'contexts/Localization'
+import { EXTENDED_LIST_DETAILS } from 'config/constants/lists'
 
 interface ImportProps {
   tokens: Token[]
@@ -28,20 +31,21 @@ function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
   const { t } = useTranslation()
 
   return (
-    <div style={{ padding: '20px 20px 20px 20px' }}>
-      <AutoColumn gap="lg">
-        <Text textAlign="center">
-          <h1 style={{ fontSize: '26px' }}>{t('Trade at your own risk!')}</h1>
+    <Box className="boxCon" sx={{ padding: '20px 20px 20px 20px' }}>
+      <Flex sx={{ flexDirection: 'column' }}>
+        <Text sx={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: '26px', color: 'red', lineHeight: '35px' }}>{t('Trade at your own risk!')}</h1>
+          <br />
           {t(
-            'ApeSwap is a Decentralized Exchange. By nature, this means anyone can create a token and add liquidity. Unlisted tokens may unfortunately be a scam.',
+            'The ApeSwap DEX is decentralized, meaning that anyone can create or add liquidity for a token. Unlisted tokens have not been reviewed by ApeSwap or passed our due diligence process. Unlisted tokens may present scam risks, including the loss of funds.',
           )}
           <br />
           <br />
-          {t('Are you a project owner?')}
+          {t('Want to see your crypto project listed? ')}
           <br />
           <br />
           <a
-            href="https://apeswap.click/partners"
+            href="https://apeswap.click/partnership"
             target="_blank"
             rel="noopener noreferrer"
             style={{ textDecoration: 'underline' }}
@@ -52,16 +56,27 @@ function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
 
         {tokens.map((token) => {
           const list = chainId && inactiveTokenList?.[chainId]?.[token.address]?.list
+          // Extended doesn't need to be defined for each list
+          const extendedLogo = EXTENDED_LIST_DETAILS[list?.name]?.logo
+          const extendedName = EXTENDED_LIST_DETAILS[list?.name]?.name
           const address = token.address ? `${truncateHash(token.address)}` : null
           return (
-            <div key={token.address}>
+            <Box key={token.address} sx={{ marginTop: '24px' }}>
               {list !== undefined ? (
                 <Tag
                   variant="success"
                   outline
-                  startIcon={list.logoURI && <ListLogo logoURI={list.logoURI} size="12px" />}
+                  startIcon={
+                    (list.logoURI || extendedLogo) && (
+                      <ListLogo
+                        logoURI={extendedLogo || list.logoURI}
+                        size="12px"
+                        style={{ borderRadius: '6px', marginRight: '5px' }}
+                      />
+                    )
+                  }
                 >
-                  via {list.name}
+                  via {extendedName || list.name}
                 </Tag>
               ) : (
                 <Tag variant="danger" outline startIcon={<ErrorIcon color="error" />}>
@@ -76,16 +91,16 @@ function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
                 <Flex>
                   <Text mr="10px">{address}</Text>
                   <Link href={getEtherscanLink(token.address, 'address', chainId)} external>
-                    <Text bold>{t('View on explorer')}</Text>
+                    <Text weight="bold">{t('View on explorer')}</Text>
                   </Link>
                 </Flex>
               )}
-            </div>
+            </Box>
           )
         })}
 
-        <Flex justifyContent="space-between" alignItems="center">
-          <Flex alignItems="center" onClick={() => setConfirmed(!confirmed)}>
+        <Flex sx={{ justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
+          <Flex sx={{ alignItems: 'center' }} onClick={() => setConfirmed(!confirmed)}>
             <Checkbox
               scale="sm"
               name="confirmed"
@@ -93,7 +108,7 @@ function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
               checked={confirmed}
               onChange={() => setConfirmed(!confirmed)}
             />
-            <Text ml="8px" style={{ userSelect: 'none' }}>
+            <Text ml="8px" sx={{ userSelect: 'none' }}>
               {t('I understand')}
             </Text>
           </Flex>
@@ -111,8 +126,8 @@ function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
             {t('Import')}
           </Button>
         </Flex>
-      </AutoColumn>
-    </div>
+      </Flex>
+    </Box>
   )
 }
 

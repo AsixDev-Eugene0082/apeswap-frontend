@@ -29,6 +29,7 @@ export interface Props {
   refunded: boolean
   isActive?: boolean
   isFinished?: boolean
+  vestedValueDollar?: string
 }
 
 const IfoCardContribute: React.FC<Props> = ({
@@ -40,6 +41,7 @@ const IfoCardContribute: React.FC<Props> = ({
   isFinished,
   isActive,
   userTokenStatus,
+  vestedValueDollar,
 }) => {
   const [pendingTx, setPendingTx] = useState(false)
   const contract = useSafeIfoContract(address, true)
@@ -71,6 +73,7 @@ const IfoCardContribute: React.FC<Props> = ({
           }
           setPendingTx(false)
         }}
+        style={{ marginTop: '20px' }}
       >
         APPROVE
       </ApproveButton>
@@ -88,16 +91,14 @@ const IfoCardContribute: React.FC<Props> = ({
             currencyAddress={currencyAddress}
             disabled={pendingTx}
           />
-          {amountContributed > 0 && (
-            <TextWrapRow>
-              <Text fontSize="14px" fontWeight={700}>
-                {t('Your contributions')}:
-              </Text>
-              <Text fontSize="14px" fontWeight={700}>
-                {amountContributed.toFixed(4)} {currency}
-              </Text>
-            </TextWrapRow>
-          )}
+          <TextWrapRow>
+            <Text fontSize="14px" fontWeight={700}>
+              {t('Your contributions')}:
+            </Text>
+            <Text fontSize="14px" fontWeight={700}>
+              {amountContributed.toFixed(3)} {currency} {`(~$${vestedValueDollar})`}
+            </Text>
+          </TextWrapRow>
         </>
       )}
       {isFinished && amountContributed > 0 && (

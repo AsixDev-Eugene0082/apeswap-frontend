@@ -1,11 +1,16 @@
 import BigNumber from 'bignumber.js'
-import { jungleFarmsConfig } from 'config/constants'
 import { JungleFarmConfig } from 'config/constants/types'
-import { TokenPrices } from 'state/types'
+import { JungleFarm, TokenPrices } from 'state/types'
 import { getPoolApr } from 'utils/apr'
 import { getBalanceNumber } from 'utils/formatBalance'
 
-const cleanJungleFarmData = (farmIds: number[], chunkedFarms: any[], tokenPrices: TokenPrices[], chainId: number) => {
+const cleanJungleFarmData = (
+  farmIds: number[],
+  chunkedFarms: any[],
+  tokenPrices: TokenPrices[],
+  chainId: number,
+  jungleFarmsConfig: JungleFarm[],
+) => {
   const data = chunkedFarms.map((chunk, index) => {
     const farmConfig = jungleFarmsConfig.find((farm) => farm.jungleId === farmIds[index])
     const [startBlock, endBlock, totalStaked] = chunk

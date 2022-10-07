@@ -2,14 +2,29 @@ import styled from 'styled-components'
 import { Button, Text } from '@apeswapfinance/uikit'
 import BaseUnlockButton from 'components/UnlockButton'
 
+export const styles = {
+  tab: {
+    padding: '4px 0',
+    minWidth: '120px',
+    fontSize: '12px',
+    'button, span': { padding: '4px 0', fontSize: '12px' },
+  },
+}
+
 export const Container = styled.div`
   background-color: ${({ theme }) => theme.colors.white3};
-  padding: 20px;
+  padding: 15px;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 272px;
+  max-width: 360px;
+`
+
+export const SubContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 `
 
 export const VestingClaimButton = styled(Button)`
@@ -47,6 +62,7 @@ export const TextWrapRow = styled.div`
   justify-content: space-between;
   flex-direction: row;
   flex-wrap: wrap;
+  padding: 15px 0;
 `
 
 export const ApproveButton = styled(Button)`
@@ -64,4 +80,5 @@ export const Wrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 100px;
 `

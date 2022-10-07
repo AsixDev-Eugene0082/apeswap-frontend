@@ -9,8 +9,10 @@ import Ideology from './components/Ideology/Ideology'
 import IfoPastProjectSwiper from './components/PastProjectSwiper/IfoPastProjectSwiper'
 import { TabOption } from './types'
 import IfoProjectCard from './components/IfoCard/ProjectCard/IfoProjectCard'
+import { useFetchTokenPrices } from 'state/tokenPrices/hooks'
 
 const Ifos = () => {
+  useFetchTokenPrices()
   const { t } = useTranslation()
   const firstPastIfoId = pastIfos.length > 0 ? pastIfos(t)[0].id : undefined
   const activeIfoId = ifos(t).find((ifo) => ifo.isActive).id
@@ -38,7 +40,7 @@ const Ifos = () => {
         <Banner
           banner="iao"
           link="https://apeswap.gitbook.io/apeswap-finance/product-and-features/raise/initial-ape-offerings-iaos"
-          title={t('Official Initial Ape Offerings')}
+          title={t('Initial Ape Offerings')}
           maxWidth={992}
           margin="30px 0px 20px 0px"
         />

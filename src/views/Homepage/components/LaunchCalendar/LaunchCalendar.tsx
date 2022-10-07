@@ -141,7 +141,7 @@ const LaunchCalendar: React.FC = () => {
             style={{ position: 'absolute', bottom: '35px', left: '0', width: '100%' }}
           >
             {[...Array(launchCalLength + 1)].map((_, i) => {
-              return <Bubble isActive={i === activeSlide} onClick={() => slideNewsNav(i)} />
+              return <Bubble isActive={i === activeSlide} onClick={() => slideNewsNav(i)} key={i} />
             })}
           </Flex>
         </LaunchCalendarWrapper>

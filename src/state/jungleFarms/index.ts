@@ -1,6 +1,4 @@
-/* eslint-disable no-param-reassign */
 import { createSlice } from '@reduxjs/toolkit'
-import jungleFarmsConfig from 'config/constants/jungleFarms'
 import {
   fetchJungleFarmsAllowance,
   fetchUserBalances,
@@ -9,13 +7,17 @@ import {
 } from './fetchJungleFarmUser'
 import { JungleFarmsState, JungleFarm, TokenPrices, AppThunk } from '../types'
 import fetchJungleFarms from './fetchJungleFarms'
+import fetchJungleFarmConfig from './api'
 
-const initialState: JungleFarmsState = { data: [...jungleFarmsConfig] }
+const initialState: JungleFarmsState = { data: [] }
 
 export const JungleFarmsSlice = createSlice({
   name: 'JungleFarms',
   initialState,
   reducers: {
+    setInitialJungleFarmData: (state, action) => {
+      state.data = action.payload
+    },
     setJungleFarmsPublicData: (state, action) => {
       const liveJungleFarmsData: JungleFarm[] = action.payload
       state.data = state.data.map((farm) => {
@@ -39,14 +41,26 @@ export const JungleFarmsSlice = createSlice({
 })
 
 // Actions
-export const { setJungleFarmsPublicData, setJungleFarmsUserData, updateJungleFarmsUserData } = JungleFarmsSlice.actions
+export const { setInitialJungleFarmData, setJungleFarmsPublicData, setJungleFarmsUserData, updateJungleFarmsUserData } =
+  JungleFarmsSlice.actions
 
 // Thunks
+
+export const setInitialJungleFarmDataAsync = () => async (dispatch) => {
+  try {
+    const initialJungleFarmState: JungleFarm[] = await fetchJungleFarmConfig()
+    dispatch(setInitialJungleFarmData(initialJungleFarmState || []))
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 export const fetchJungleFarmsPublicDataAsync =
   (chainId: number, tokenPrices: TokenPrices[]): AppThunk =>
-  async (dispatch) => {
+  async (dispatch, getState) => {
     try {
-      const farms = await fetchJungleFarms(chainId, tokenPrices)
+      const jungleFarms = getState().jungleFarms.data
+      const farms = await fetchJungleFarms(chainId, tokenPrices, jungleFarms)
       dispatch(setJungleFarmsPublicData(farms))
     } catch (error) {
       console.warn(error)
@@ -55,14 +69,14 @@ export const fetchJungleFarmsPublicDataAsync =
 
 export const fetchJungleFarmsUserDataAsync =
   (chainId: number, account): AppThunk =>
-  async (dispatch) => {
+  async (dispatch, getState) => {
     try {
-      const allowances = await fetchJungleFarmsAllowance(chainId, account)
-      const stakingTokenBalances = await fetchUserBalances(chainId, account)
-      const stakedBalances = await fetchUserStakeBalances(chainId, account)
-      const pendingRewards = await fetchUserPendingRewards(chainId, account)
-
-      const userData = jungleFarmsConfig.map((farm) => ({
+      const jungleFarms = getState().jungleFarms.data
+      const allowances = await fetchJungleFarmsAllowance(chainId, account, jungleFarms)
+      const stakingTokenBalances = await fetchUserBalances(chainId, account, jungleFarms)
+      const stakedBalances = await fetchUserStakeBalances(chainId, account, jungleFarms)
+      const pendingRewards = await fetchUserPendingRewards(chainId, account, jungleFarms)
+      const userData = jungleFarms.map((farm) => ({
         jungleId: farm.jungleId,
         allowance: allowances[farm.jungleId],
         stakingTokenBalance: stakingTokenBalances[farm.jungleId],
@@ -77,29 +91,33 @@ export const fetchJungleFarmsUserDataAsync =
 
 export const updateJungleFarmsUserAllowance =
   (chainId: number, jungleId: number, account: string): AppThunk =>
-  async (dispatch) => {
-    const allowances = await fetchJungleFarmsAllowance(chainId, account)
+  async (dispatch, getState) => {
+    const jungleFarms = getState().jungleFarms.data
+    const allowances = await fetchJungleFarmsAllowance(chainId, account, jungleFarms)
     dispatch(updateJungleFarmsUserData({ jungleId, field: 'allowance', value: allowances[jungleId] }))
   }
 
 export const updateJungleFarmsUserBalance =
   (chainId: number, jungleId: number, account: string): AppThunk =>
-  async (dispatch) => {
-    const tokenBalances = await fetchUserBalances(chainId, account)
+  async (dispatch, getState) => {
+    const jungleFarms = getState().jungleFarms.data
+    const tokenBalances = await fetchUserBalances(chainId, account, jungleFarms)
     dispatch(updateJungleFarmsUserData({ jungleId, field: 'stakingTokenBalance', value: tokenBalances[jungleId] }))
   }
 
 export const updateJungleFarmsUserStakedBalance =
   (chainId: number, jungleId: number, account: string): AppThunk =>
-  async (dispatch) => {
-    const stakedBalances = await fetchUserStakeBalances(chainId, account)
+  async (dispatch, getState) => {
+    const jungleFarms = getState().jungleFarms.data
+    const stakedBalances = await fetchUserStakeBalances(chainId, account, jungleFarms)
     dispatch(updateJungleFarmsUserData({ jungleId, field: 'stakedBalance', value: stakedBalances[jungleId] }))
   }
 
 export const updateJungleFarmsUserPendingReward =
   (chainId: number, jungleId: number, account: string): AppThunk =>
-  async (dispatch) => {
-    const pendingRewards = await fetchUserPendingRewards(chainId, account)
+  async (dispatch, getState) => {
+    const jungleFarms = getState().jungleFarms.data
+    const pendingRewards = await fetchUserPendingRewards(chainId, account, jungleFarms)
     dispatch(updateJungleFarmsUserData({ jungleId, field: 'pendingReward', value: pendingRewards[jungleId] }))
   }
 

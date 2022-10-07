@@ -1,6 +1,6 @@
 import React from 'react'
-import { Token } from '@apeswapfinance/sdk'
-import { Modal, ModalProps } from '@apeswapfinance/uikit'
+import { Token } from '@ape.swap/sdk'
+import { Modal, ModalProps } from '@ape.swap/uikit'
 import ImportToken from 'components/SearchModal/ImportToken'
 import { useTranslation } from 'contexts/Localization'
 

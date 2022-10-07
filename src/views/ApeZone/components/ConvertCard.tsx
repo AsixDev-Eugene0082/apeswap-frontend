@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react'
+/** @jsxImportSource theme-ui */
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Text } from '@apeswapfinance/uikit'
 import BigNumber from 'bignumber.js'
 import { ethers } from 'ethers'
@@ -13,7 +14,6 @@ import useTokenBalance from 'hooks/useTokenBalance'
 
 import { useTranslation } from 'contexts/Localization'
 import TokenInput from 'components/TokenInput'
-import CardValue from 'components/CardValue'
 import {
   FlexSection,
   CheckBoxCon,
@@ -27,6 +27,10 @@ import {
   StyledText,
   StyledCard,
 } from './styles'
+import UnlockButton from 'components/UnlockButton'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
+import { Flex } from 'theme-ui'
+import { useUserUnlimitedGnana } from 'state/user/hooks'
 
 interface ConvertCardType {
   fromToken: string
@@ -34,9 +38,10 @@ interface ConvertCardType {
 }
 
 const ConvertCard: React.FC<ConvertCardType> = ({ fromToken, toToken }) => {
-  const MAX_BUY = 50
-  const [val, setVal] = useState('1')
-  const [unlimited, setUnlimited] = useState(false)
+  const MAX_BUY = 5000
+  const [val, setVal] = useState('')
+  const [unlimitedGnana, setUnlimitedGnanaMinting] = useUserUnlimitedGnana()
+  const [unlimited, setUnlimited] = useState<boolean>(unlimitedGnana)
   const gnanaVal = parseFloat(val) * 0.7
   const [processing, setProcessing] = useState(false)
   const treasuryContract = useTreasury()
@@ -45,6 +50,8 @@ const ConvertCard: React.FC<ConvertCardType> = ({ fromToken, toToken }) => {
   const { toastSuccess } = useToast()
   const bananaContract = useBanana()
   const { t } = useTranslation()
+  const [triedMore, setTriedMore] = useState(false)
+  const { account } = useActiveWeb3React()
 
   const { isApproving, isApproved, handleApprove } = useApproveTransaction({
     onRequiresApproval: async (loadedAccount) => {
@@ -70,11 +77,20 @@ const ConvertCard: React.FC<ConvertCardType> = ({ fromToken, toToken }) => {
 
   const handleChange = useCallback(
     (e: React.FormEvent<HTMLInputElement>) => {
-      if (!unlimited && parseInt(e.currentTarget.value) > MAX_BUY) return
+      if (!unlimited && parseInt(e.currentTarget.value) > MAX_BUY) {
+        setTriedMore(true)
+        return
+      }
       setVal(e.currentTarget.value)
     },
     [setVal, unlimited],
   )
+
+  useEffect(() => {
+    setTimeout(() => {
+      setTriedMore(false)
+    }, 600)
+  }, [triedMore])
 
   const buy = useCallback(async () => {
     try {
@@ -98,8 +114,12 @@ const ConvertCard: React.FC<ConvertCardType> = ({ fromToken, toToken }) => {
 
   const handleCheckBox = useCallback(() => {
     setUnlimited(!unlimited)
-    if (unlimited) setVal('1')
-  }, [unlimited, setUnlimited])
+    if (!unlimited) setUnlimitedGnanaMinting(true)
+    if (unlimited) {
+      setUnlimitedGnanaMinting(false)
+      setVal('')
+    }
+  }, [setUnlimitedGnanaMinting, unlimited])
 
   return (
     <StyledCard>
@@ -115,10 +135,14 @@ const ConvertCard: React.FC<ConvertCardType> = ({ fromToken, toToken }) => {
           value={val}
           onSelectMax={handleSelectMax}
           onChange={handleChange}
-          max={fullBalance}
+          max={parseFloat(fullBalance).toFixed(2)}
           symbol={fromToken}
         />
-        {isApproved ? (
+        {!account ? (
+          <Flex sx={{ margin: '15px 0 10px 0' }}>
+            <UnlockButton table />
+          </Flex>
+        ) : isApproved ? (
           <StyledButton disabled={disabled} variant="primary" margin="10px" onClick={buy}>
             {t('CONVERT')}
           </StyledButton>
@@ -129,25 +153,18 @@ const ConvertCard: React.FC<ConvertCardType> = ({ fromToken, toToken }) => {
         )}
 
         <FlexSection flexDirection="column" alignItems="center" mb="10px">
-          <CardValue
-            top="10px"
-            fontWeight={700}
-            fontSize="16px"
-            decimals={4}
-            value={gnanaVal}
-            prefix={`${t('OUTPUT')} ${toToken}`}
-          />
-
-          <Text fontSize="12px" fontWeight={500}>
+          <Text fontSize="16px" fontWeight={700}>
+            {t('OUTPUT')} {`${toToken} ${gnanaVal ? gnanaVal.toFixed(3) : 0}`}
+          </Text>
+          <Text fontSize="12px" fontWeight={500} style={{ color: triedMore ? '#ff0000' : null }}>
             {t('*Current max conversion is %displayMax%', { displayMax })}
           </Text>
-
           <CBS>
             <CheckBoxCon>
               <StyledCheckbox id="checkbox" scale="md" checked={unlimited} onChange={handleCheckBox} />
             </CheckBoxCon>
             <StyledText fontSize="12px" fontWeight={500}>
-              {t('I understand what I am doing and want to enable unlimited conversion.')}
+              {t('I understand how GNANA works and I want to enable unlimited buy.')}
             </StyledText>
           </CBS>
         </FlexSection>

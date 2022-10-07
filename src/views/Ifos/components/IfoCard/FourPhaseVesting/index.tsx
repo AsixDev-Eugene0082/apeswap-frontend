@@ -7,19 +7,18 @@ import { BSC_BLOCK_TIME } from 'config'
 import { Ifo, IfoStatus } from 'config/constants/types'
 import multicall from 'utils/multicall'
 import UnlockButton from 'components/UnlockButton'
-import { useBlock } from 'state/block/hooks'
-import { usePriceBnbBusd, usePriceGnanaBusd } from 'state/hooks'
+import useBlockNumber from 'lib/hooks/useBlockNumber'
+import { usePriceBnbBusd, usePriceGnanaBusd } from 'state/tokenPrices/hooks'
 import { useSafeIfoContract } from 'hooks/useContract'
 import getTimePeriods from 'utils/getTimePeriods'
 import { getBalanceNumber } from 'utils/formatBalance'
-import { Toggle } from '@apeswapfinance/uikit'
 import { useTranslation } from 'contexts/Localization'
 import IfoCardHeader from '../CardHeader/IfoCardHeader'
 import IfoCardProgress from '../CardProgress/IfoCardProgress'
 import IfoCardDetails from '../CardDetails/IfoCardDetails'
 import IfoCardContribute from './IfoCardContribute'
 import useUserInfo from './useUserInfo'
-import { Container, Wrapper } from './styles'
+import { Container, Wrapper, StyledToggle } from './styles'
 
 const StyledUnlockButton = () => {
   return (
@@ -85,7 +84,7 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
   })
   const { account, chainId } = useActiveWeb3React()
   const contract = useSafeIfoContract(address, false)
-  const { currentBlock } = useBlock()
+  const currentBlock = useBlockNumber()
   const bnbPrice = usePriceBnbBusd()
   const gnanaPrice = usePriceGnanaBusd()
   const { t } = useTranslation()
@@ -273,7 +272,7 @@ const IfoCard: React.FC<IfoCardProps> = ({ ifo, gnana }) => {
       )}
       {getBalanceNumber(userInfo.amount, 18) !== 0 && isFinished && (
         <Wrapper>
-          <Toggle
+          <StyledToggle
             size="md"
             labels={[t('MY STATS'), t('OVERALL STATS')]}
             onClick={() => {

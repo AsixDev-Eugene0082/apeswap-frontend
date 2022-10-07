@@ -1,6 +1,4 @@
-/* eslint-disable no-param-reassign */
 import { createSlice } from '@reduxjs/toolkit'
-import { dualFarmsConfig } from 'config/constants'
 import BigNumber from 'bignumber.js'
 import fetchDualFarms from './fetchDualFarms'
 import {
@@ -10,14 +8,18 @@ import {
   fetchDualFarmUserStakedBalances,
   fetchDualFarmRewarderEarnings,
 } from './fetchDualFarmUser'
-import { TokenPrices, DualFarm, DualFarmsState, FarmLpAprsType } from '../types'
+import { TokenPrices, DualFarm, DualFarmsState, FarmLpAprsType, AppThunk } from '../types'
+import fetchDualFarmConfig from './api'
 
-const initialState: DualFarmsState = { data: [...dualFarmsConfig] }
+const initialState: DualFarmsState = { data: [] }
 
 export const dualFarmsSlice = createSlice({
   name: 'dualFarms',
   initialState,
   reducers: {
+    setInitialDualFarmData: (state, action) => {
+      state.data = action.payload
+    },
     setDualFarmsPublicData: (state, action) => {
       const liveFarmsData: DualFarm[] = action.payload
       state.data = state.data.map((farm) => {
@@ -41,70 +43,100 @@ export const dualFarmsSlice = createSlice({
 })
 
 // Actions
-export const { setDualFarmsPublicData, setDualFarmUserData, updateDualFarmUserData } = dualFarmsSlice.actions
+export const { setInitialDualFarmData, setDualFarmsPublicData, setDualFarmUserData, updateDualFarmUserData } =
+  dualFarmsSlice.actions
 
 // Thunks
+
+export const setInitialDualFarmDataAsync = () => async (dispatch) => {
+  try {
+    const initialDualFarmState: DualFarm[] = await fetchDualFarmConfig()
+    dispatch(setInitialDualFarmData(initialDualFarmState || []))
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 export const fetchDualFarmsPublicDataAsync =
-  (chainId: number, tokenPrices: TokenPrices[], bananaPrice: BigNumber, farmLpAprs: FarmLpAprsType) =>
-  async (dispatch) => {
+  (chainId: number, tokenPrices: TokenPrices[], bananaPrice: BigNumber, farmLpAprs: FarmLpAprsType): AppThunk =>
+  async (dispatch, getState) => {
     try {
-      const farms = await fetchDualFarms(chainId, tokenPrices, bananaPrice, farmLpAprs)
+      const dualFarms = getState().dualFarms.data
+      const farms = await fetchDualFarms(chainId, tokenPrices, bananaPrice, farmLpAprs, dualFarms)
       dispatch(setDualFarmsPublicData(farms))
     } catch (error) {
       console.warn(error)
     }
   }
-export const fetchDualFarmUserDataAsync = (chainId: number, account: string) => async (dispatch) => {
-  try {
-    const userFarmAllowances = await fetchDualFarmUserAllowances(chainId, account)
-    const userFarmTokenBalances = await fetchDualFarmUserTokenBalances(chainId, account)
-    const userStakedBalances = await fetchDualFarmUserStakedBalances(chainId, account)
-    const miniChefEarnings = await fetchDualMiniChefEarnings(chainId, account)
-    const rewarderEarnings = await fetchDualFarmRewarderEarnings(chainId, account)
-    const arrayOfUserDataObjects = dualFarmsConfig.map((dualFarm) => {
-      return {
-        pid: dualFarm.pid,
-        allowance: userFarmAllowances[dualFarm.pid],
-        tokenBalance: userFarmTokenBalances[dualFarm.pid],
-        stakedBalance: userStakedBalances[dualFarm.pid],
-        miniChefEarnings: miniChefEarnings[dualFarm.pid],
-        rewarderEarnings: rewarderEarnings[dualFarm.pid],
-      }
-    })
-    dispatch(setDualFarmUserData(arrayOfUserDataObjects))
-  } catch (error) {
-    console.warn(error)
+export const fetchDualFarmUserDataAsync =
+  (chainId: number, account: string): AppThunk =>
+  async (dispatch, getState) => {
+    try {
+      const dualFarms = getState().dualFarms.data
+      const userFarmAllowances = await fetchDualFarmUserAllowances(chainId, account, dualFarms)
+      const userFarmTokenBalances = await fetchDualFarmUserTokenBalances(chainId, account, dualFarms)
+      const userStakedBalances = await fetchDualFarmUserStakedBalances(chainId, account, dualFarms)
+      const miniChefEarnings = await fetchDualMiniChefEarnings(chainId, account, dualFarms)
+      const rewarderEarnings = await fetchDualFarmRewarderEarnings(chainId, account, dualFarms)
+      const arrayOfUserDataObjects = dualFarms.map((dualFarm) => {
+        return {
+          pid: dualFarm.pid,
+          allowance: userFarmAllowances.find((item) => item.pid === dualFarm.pid).value,
+          tokenBalance: userFarmTokenBalances.find((item) => item.pid === dualFarm.pid).value,
+          stakedBalance: userStakedBalances.find((item) => item.pid === dualFarm.pid).value,
+          miniChefEarnings: miniChefEarnings.find((item) => item.pid === dualFarm.pid).value,
+          rewarderEarnings: rewarderEarnings.find((item) => item.pid === dualFarm.pid).value,
+        }
+      })
+      dispatch(setDualFarmUserData(arrayOfUserDataObjects))
+    } catch (error) {
+      console.warn(error)
+    }
   }
-}
 
-export const updateDualFarmUserAllowances = (chainId: number, pid, account: string) => async (dispatch) => {
-  const allowances = await fetchDualFarmUserAllowances(chainId, account)
-  const pidIndex = dualFarmsConfig.findIndex((f) => f.pid === pid)
-  dispatch(updateDualFarmUserData({ pid, field: 'allowance', value: allowances[pidIndex] }))
-}
+export const updateDualFarmUserAllowances =
+  (chainId: number, pid, account: string): AppThunk =>
+  async (dispatch, getState) => {
+    const dualFarms = getState().dualFarms.data
+    const allowances = await fetchDualFarmUserAllowances(chainId, account, dualFarms)
+    const pidIndex = dualFarms.findIndex((f) => f.pid === pid)
+    dispatch(updateDualFarmUserData({ pid, field: 'allowance', value: allowances[pidIndex].value }))
+  }
 
-export const updateDualFarmUserTokenBalances = (chainId: number, pid, account: string) => async (dispatch) => {
-  const tokenBalances = await fetchDualFarmUserTokenBalances(chainId, account)
-  const pidIndex = dualFarmsConfig.findIndex((f) => f.pid === pid)
-  dispatch(updateDualFarmUserData({ pid, field: 'tokenBalance', value: tokenBalances[pidIndex] }))
-}
+export const updateDualFarmUserTokenBalances =
+  (chainId: number, pid, account: string): AppThunk =>
+  async (dispatch, getState) => {
+    const dualFarms = getState().dualFarms.data
+    const tokenBalances = await fetchDualFarmUserTokenBalances(chainId, account, dualFarms)
+    const pidIndex = dualFarms.findIndex((f) => f.pid === pid)
+    dispatch(updateDualFarmUserData({ pid, field: 'tokenBalance', value: tokenBalances[pidIndex].value }))
+  }
 
-export const updateDualFarmUserStakedBalances = (chainId: number, pid, account: string) => async (dispatch) => {
-  const stakedBalances = await fetchDualFarmUserStakedBalances(chainId, account)
-  const pidIndex = dualFarmsConfig.findIndex((f) => f.pid === pid)
-  dispatch(updateDualFarmUserData({ pid, field: 'stakedBalance', value: stakedBalances[pidIndex] }))
-}
+export const updateDualFarmUserStakedBalances =
+  (chainId: number, pid, account: string): AppThunk =>
+  async (dispatch, getState) => {
+    const dualFarms = getState().dualFarms.data
+    const stakedBalances = await fetchDualFarmUserStakedBalances(chainId, account, dualFarms)
+    const pidIndex = dualFarms.findIndex((f) => f.pid === pid)
+    dispatch(updateDualFarmUserData({ pid, field: 'stakedBalance', value: stakedBalances[pidIndex].value }))
+  }
 
-export const updateDualFarmUserEarnings = (chainId: number, pid, account: string) => async (dispatch) => {
-  const pendingRewards = await fetchDualMiniChefEarnings(chainId, account)
-  const pidIndex = dualFarmsConfig.findIndex((f) => f.pid === pid)
-  dispatch(updateDualFarmUserData({ pid, field: 'miniChefEarnings', value: pendingRewards[pidIndex] }))
-}
+export const updateDualFarmUserEarnings =
+  (chainId: number, pid, account: string): AppThunk =>
+  async (dispatch, getState) => {
+    const dualFarms = getState().dualFarms.data
+    const pendingRewards = await fetchDualMiniChefEarnings(chainId, account, dualFarms)
+    const pidIndex = dualFarms.findIndex((f) => f.pid === pid)
+    dispatch(updateDualFarmUserData({ pid, field: 'miniChefEarnings', value: pendingRewards[pidIndex].value }))
+  }
 
-export const updateDualFarmRewarderEarnings = (chainId: number, pid, account: string) => async (dispatch) => {
-  const rewarderEarnings = await fetchDualFarmRewarderEarnings(chainId, account)
-  const pidIndex = dualFarmsConfig.findIndex((f) => f.pid === pid)
-  dispatch(updateDualFarmUserData({ pid, field: 'rewarderEarnings', value: rewarderEarnings[pidIndex] }))
-}
+export const updateDualFarmRewarderEarnings =
+  (chainId: number, pid, account: string): AppThunk =>
+  async (dispatch, getState) => {
+    const dualFarms = getState().dualFarms.data
+    const rewarderEarnings = await fetchDualFarmRewarderEarnings(chainId, account, dualFarms)
+    const pidIndex = dualFarms.findIndex((f) => f.pid === pid)
+    dispatch(updateDualFarmUserData({ pid, field: 'rewarderEarnings', value: rewarderEarnings[pidIndex].value }))
+  }
 
 export default dualFarmsSlice.reducer

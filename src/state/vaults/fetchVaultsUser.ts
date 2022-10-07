@@ -3,10 +3,10 @@ import erc20ABI from 'config/abi/erc20.json'
 import vaultApeV1ABI from 'config/abi/vaultApeV1.json'
 import vaultApeV2ABI from 'config/abi/vaultApeV2.json'
 import multicall from 'utils/multicall'
-import { vaultsConfig } from 'config/constants'
 import { getVaultApeAddressV1, getVaultApeAddressV2 } from 'utils/addressHelper'
+import { Vault } from 'state/types'
 
-export const fetchVaultUserAllowances = async (account: string, chainId: number) => {
+export const fetchVaultUserAllowances = async (account: string, chainId: number, vaultsConfig: Vault[]) => {
   const vaultApeAddressV1 = getVaultApeAddressV1(chainId)
   const vaultApeAddressV2 = getVaultApeAddressV2(chainId)
   const filteredVaults = vaultsConfig.filter((vault) => vault.availableChains.includes(chainId))
@@ -24,7 +24,7 @@ export const fetchVaultUserAllowances = async (account: string, chainId: number)
   return parsedStakeAllowances
 }
 
-export const fetchVaultUserTokenBalances = async (account: string, chainId: number) => {
+export const fetchVaultUserTokenBalances = async (account: string, chainId: number, vaultsConfig: Vault[]) => {
   const filteredVaults = vaultsConfig.filter((vault) => vault.availableChains.includes(chainId))
   const calls = filteredVaults.map((vault) => {
     return {
@@ -40,7 +40,11 @@ export const fetchVaultUserTokenBalances = async (account: string, chainId: numb
   return parsedTokenBalances
 }
 
-export const fetchVaultUserStakedAndPendingBalances = async (account: string, chainId: number) => {
+export const fetchVaultUserStakedAndPendingBalances = async (
+  account: string,
+  chainId: number,
+  vaultsConfig: Vault[],
+) => {
   const vaultApeAddressV1 = getVaultApeAddressV1(chainId)
   const vaultApeAddressV2 = getVaultApeAddressV2(chainId)
   const filteredVaults = vaultsConfig.filter((vault) => vault.availableChains.includes(chainId))

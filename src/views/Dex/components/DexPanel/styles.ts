@@ -29,6 +29,7 @@ export const styles: Record<string, ThemeUIStyleObject> = {
   },
 
   swapDirectionText: {
+    fontSize: '16px',
     position: 'absolute',
     left: 0,
     top: 0,

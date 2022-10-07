@@ -9,8 +9,13 @@ import { computeTradePriceBreakdown } from 'utils/prices'
 import { useHistory } from 'react-router-dom'
 import { useTranslation } from 'contexts/Localization'
 import track from 'utils/track'
-import { CurrencyAmount, JSBI, Token, Trade } from '@apeswapfinance/sdk'
-import { useExpertModeManager, useUserRecentTransactions, useUserSlippageTolerance } from 'state/user/hooks'
+import {
+  useExpertModeManager,
+  useIsModalShown,
+  useUserRecentTransactions,
+  useUserSlippageTolerance,
+} from 'state/user/hooks'
+import { CurrencyAmount, JSBI, Token, Trade } from '@ape.swap/sdk'
 import { useDefaultsFromURLSearch, useDerivedSwapInfo, useSwapActionHandlers, useSwapState } from 'state/swap/hooks'
 import useWrapCallback, { WrapType } from 'hooks/useWrapCallback'
 import maxAmountSpend from 'utils/maxAmountSpend'
@@ -26,9 +31,11 @@ import LoadingBestRoute from './components/LoadingBestRoute'
 import ExpertModeRecipient from './components/ExpertModeRecipient'
 import confirmPriceImpactWithoutFee from './components/confirmPriceImpactWithoutFee'
 import RecentTransactions from '../components/RecentTransactions'
+import { useBananaAddress } from 'hooks/useAddress'
+import { showCircular } from 'utils'
 
 const Swap: React.FC = () => {
-  // modal and loading
+  const { showBuyModal } = useIsModalShown()
   const [{ tradeToConfirm, swapErrorMessage, attemptingTxn, txHash }, setSwapState] = useState<{
     tradeToConfirm: Trade | undefined
     attemptingTxn: boolean
@@ -55,35 +62,6 @@ const Swap: React.FC = () => {
 
   const [recentTransactions] = useUserRecentTransactions()
 
-  // token warning stuff
-  const [loadedInputCurrency, loadedOutputCurrency] = [
-    useCurrency(loadedUrlParams?.inputCurrencyId),
-    useCurrency(loadedUrlParams?.outputCurrencyId),
-  ]
-  const urlLoadedTokens: Token[] = useMemo(
-    () => [loadedInputCurrency, loadedOutputCurrency]?.filter((c): c is Token => c instanceof Token) ?? [],
-    [loadedInputCurrency, loadedOutputCurrency],
-  )
-
-  // dismiss warning if all imported tokens are in active lists
-  const defaultTokens = useAllTokens()
-  const importTokensNotInDefault =
-    urlLoadedTokens &&
-    urlLoadedTokens.filter((token: Token) => {
-      return !(token.address in defaultTokens)
-    })
-
-  const [onPresentImportTokenWarningModal] = useModal(
-    <ImportTokenWarningModal tokens={importTokensNotInDefault} onCancel={() => history.push('/swap/')} />,
-  )
-
-  useEffect(() => {
-    if (importTokensNotInDefault.length > 0) {
-      onPresentImportTokenWarningModal()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [importTokensNotInDefault.length])
-
   // for expert mode
   const [isExpertMode] = useExpertModeManager()
 
@@ -94,6 +72,8 @@ const Swap: React.FC = () => {
   const { v2Trade, currencyBalances, parsedAmount, currencies, inputError: swapInputError } = useDerivedSwapInfo()
 
   const [inputCurrency, outputCurrency] = [useCurrency(INPUT?.currencyId), useCurrency(OUTPUT?.currencyId)]
+  const bananaToken = useCurrency(useBananaAddress())
+  const buyingBanana = outputCurrency === bananaToken
 
   const {
     wrapType,
@@ -129,9 +109,12 @@ const Swap: React.FC = () => {
 
   const maxAmountInput: CurrencyAmount | undefined = maxAmountSpend(currencyBalances[Field.INPUT])
 
-  const fetchingBestRoute = swapDelay === SwapDelay.INPUT_DELAY || swapDelay === SwapDelay.LOADING_ROUTE
+  const fetchingBestRoute =
+    swapDelay === SwapDelay.USER_INPUT ||
+    swapDelay === SwapDelay.FETCHING_SWAP ||
+    swapDelay === SwapDelay.FETCHING_BONUS
 
-  const { priceImpactWithoutFee } = computeTradePriceBreakdown(trade)
+  const { priceImpactWithoutFee } = computeTradePriceBreakdown(chainId, bestRoute.smartRouter, trade)
 
   const handleAcceptChanges = useCallback(() => {
     setSwapState((prevState) => ({ ...prevState, tradeToConfirm: trade }))
@@ -157,6 +140,12 @@ const Swap: React.FC = () => {
     currencies[Field.INPUT] && currencies[Field.OUTPUT] && parsedAmounts[independentField]?.greaterThan(JSBI.BigInt(0)),
   )
 
+  const { routerType } = bestRoute
+
+  const displayBuyCircular = useCallback(
+    () => showBuyModal && showCircular(chainId, history, '?modal=circular-buy'),
+    [history, showBuyModal, chainId],
+  )
   const handleSwap = useCallback(() => {
     if (priceImpactWithoutFee && !confirmPriceImpactWithoutFee(priceImpactWithoutFee, t)) {
       return
@@ -173,12 +162,14 @@ const Swap: React.FC = () => {
           value: tradeValueUsd,
           chain: chainId,
           data: {
+            router: routerType,
             token1: trade?.inputAmount?.currency?.getSymbol(chainId),
             token2: trade?.outputAmount?.currency?.getSymbol(chainId),
             token1Amount: Number(trade?.inputAmount.toSignificant(6)),
             token2Amount: Number(trade?.outputAmount.toSignificant(6)),
           },
         })
+        if (buyingBanana && hash) displayBuyCircular()
       })
       .catch((error) => {
         setSwapState({
@@ -188,7 +179,51 @@ const Swap: React.FC = () => {
           txHash: undefined,
         })
       })
-  }, [priceImpactWithoutFee, swapCallback, tradeToConfirm, trade, tradeValueUsd, chainId, t])
+  }, [
+    priceImpactWithoutFee,
+    swapCallback,
+    tradeToConfirm,
+    trade,
+    tradeValueUsd,
+    chainId,
+    t,
+    routerType,
+    buyingBanana,
+    displayBuyCircular,
+  ])
+
+  // token warning stuff
+  const [loadedInputCurrency, loadedOutputCurrency] = [
+    useCurrency(loadedUrlParams?.inputCurrencyId),
+    useCurrency(loadedUrlParams?.outputCurrencyId),
+  ]
+  const urlLoadedTokens: Token[] = useMemo(
+    () => [loadedInputCurrency, loadedOutputCurrency]?.filter((c): c is Token => c instanceof Token) ?? [],
+    [loadedInputCurrency, loadedOutputCurrency],
+  )
+
+  // dismiss warning if all imported tokens are in active lists
+  const defaultTokens = useAllTokens()
+  const importTokensNotInDefault = useMemo(
+    () =>
+      urlLoadedTokens &&
+      urlLoadedTokens.filter((token: Token) => {
+        return !(token.address in defaultTokens)
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [urlLoadedTokens],
+  )
+
+  const [onPresentImportTokenWarningModal] = useModal(
+    <ImportTokenWarningModal tokens={importTokensNotInDefault} onCancel={() => history.push('/swap/')} />,
+  )
+
+  useEffect(() => {
+    if (importTokensNotInDefault.length > 0) {
+      onPresentImportTokenWarningModal()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [importTokensNotInDefault.length])
 
   const [onPresentConfirmModal] = useModal(
     <ConfirmSwapModal
@@ -225,6 +260,9 @@ const Swap: React.FC = () => {
             onCurrencySelect={onCurrencySelection}
             onUserInput={onUserInput}
             handleMaxInput={handleMaxInput}
+            smartRouter={bestRoute.smartRouter}
+            independentField={independentField}
+            disabled={fetchingBestRoute}
           />
           <SwapSwitchButton onClick={onSwitchTokens} />
           <DexPanel
@@ -235,7 +273,11 @@ const Swap: React.FC = () => {
             fieldType={Field.OUTPUT}
             onCurrencySelect={onCurrencySelection}
             onUserInput={onUserInput}
+            smartRouter={bestRoute.smartRouter}
+            independentField={independentField}
+            disabled={fetchingBestRoute}
           />
+
           <ExpertModeRecipient
             recipient={recipient}
             showWrap={showWrap}
@@ -255,6 +297,7 @@ const Swap: React.FC = () => {
             />
           )}
           <DexActions
+            inputCurrency={inputCurrency}
             trade={trade}
             wrapInputError={wrapInputError}
             swapInputError={swapInputError}
@@ -262,6 +305,7 @@ const Swap: React.FC = () => {
             showWrap={showWrap}
             wrapType={wrapType}
             routerType={bestRoute.routerType}
+            smartRouter={bestRoute.smartRouter}
             swapCallbackError={swapCallbackError}
             priceImpactWithoutFee={priceImpactWithoutFee}
             userHasSpecifiedInputOutput={userHasSpecifiedInputOutput}

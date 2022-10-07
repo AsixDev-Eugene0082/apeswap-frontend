@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import track from 'utils/track'
-import { CHAIN_ID } from 'config/constants'
 import { listNfa } from 'utils/callHelpers'
 import { useAuction } from './useContract'
 
@@ -13,7 +12,7 @@ const useListNfa = () => {
         const txHash = await listNfa(auctionContract, id, auctionLength, timeToExtend, minimumExtendTime, minimumBid)
         track({
           event: 'nfa',
-          chain: CHAIN_ID,
+          chain: 56,
           data: {
             cat: 'add-auction',
             id,
